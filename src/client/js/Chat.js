@@ -16,6 +16,7 @@ export default class Chat {
     this.setupChat();
     this.setupEvents();
     this.setupSynth();
+    // supppp
   }
 
   setupSocket () {
