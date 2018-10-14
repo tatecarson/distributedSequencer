@@ -13,17 +13,17 @@ const io = new SocketIO(server);
 const port = process.env.PORT || 3000;
 const users = [];
 const sockets = {};
-const link = new abletonlink();
+const link = new abletonlink(240, 4);
 
 app.use(compression({}));
 app.use(express['static'](__dirname + '/../client'));
 
 (() => {
   let lastBeat = 0.0;
-  link.startUpdate(60, (beat, phase, bpm) => {
+  link.startUpdate(16, (beat, phase, bpm) => {
     beat = 0 ^ beat;
     if (beat - lastBeat > 0) {
-      io.emit('beat', { beat });
+      io.emit('beat', { beat, phase, bpm });
       // this is sending
       // console.log('beat');
       lastBeat = beat;

@@ -30,17 +30,17 @@ var io = new _socket2.default(server);
 var port = process.env.PORT || 3000;
 var users = [];
 var sockets = {};
-var link = new _abletonlink2.default();
+var link = new _abletonlink2.default(240, 4);
 
 app.use((0, _compression2.default)({}));
 app.use(_express2.default['static'](__dirname + '/../client'));
 
 (function () {
   var lastBeat = 0.0;
-  link.startUpdate(60, function (beat, phase, bpm) {
+  link.startUpdate(16, function (beat, phase, bpm) {
     beat = 0 ^ beat;
     if (beat - lastBeat > 0) {
-      io.emit('beat', { beat: beat });
+      io.emit('beat', { beat: beat, phase: phase, bpm: bpm });
       // this is sending
       // console.log('beat');
       lastBeat = beat;

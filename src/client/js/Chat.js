@@ -1,6 +1,12 @@
 import io from 'socket.io-client';
+import Nexus from 'nexusui';
 import {sanitizeString} from '../../shared/util';
-import Tone from 'tone';
+import MakeSynth from './MakeSynth';
+import Tone from 'Tone/core/Tone';
+import Synth from 'Tone/instrument/Synth';
+import AMSynth from 'Tone/instrument/AMSynth';
+import FMSynth from 'Tone/instrument/FMSynth';
+import Transport from 'Tone/core/Transport';
 
 export default class Chat {
   constructor (nick) {
@@ -16,7 +22,6 @@ export default class Chat {
     this.setupChat();
     this.setupEvents();
     this.setupSynth();
-    // supppp
   }
 
   setupSocket () {
@@ -63,14 +68,35 @@ export default class Chat {
   }
 
   setupSynth () {
-    const synth = new Tone.Synth().toMaster();
+    
+    const bsynth = new Tone.Synth().toMaster();
+    const amSynth = new Tone.AMSynth().toMaster();
+    const fmSynth = new Tone.FMSynth().toMaster();
 
+    const synth = new MakeSynth();
+    const players = 4;
+    const patterns = [];
+    // for (let i = 0; i < players; i++) {
+    //   patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    // }
+    patterns[0] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    // patterns[1] = synth.createPattern(5, 16);
+    // patterns[2] = synth.createPattern(3, 7);
     this.socket.on('beat', function (data) {
+      
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
-        // @2n quantization seems to work best
-        // TODO: now do something interesting with this
-        synth.triggerAttackRelease('C4', '8n', '@2n');
+        // play if pattern is a 1
+        if (patterns[0].next()) {
+          bsynth.triggerAttackRelease(Nexus.note(0), '8n', '@2n');
+        }
+        // if (patterns[1].next()) {
+        //   amSynth.triggerAttackRelease(Nexus.note(1, 1), '16n', '@2n');
+        // }
+        // if (patterns[2].next()) {
+        //   fmSynth.triggerAttackRelease(Nexus.note(7, -1), '8n', '@2n');
+        // }
+        Tone.Transport.bpm.value = data.bpm;
       }
     });
   }

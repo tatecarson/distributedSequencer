@@ -1,0 +1,8 @@
+{
+  "type": "docker", 
+  "public": true,
+  "alias": "distseq",  
+  "features": {
+    "cloud":"v1"
+  }
+}
