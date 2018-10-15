@@ -89,10 +89,30 @@ export default class Chat {
       }
     });
 
-    // pick a random instrument
-    const rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
     // pick random note
-    const rNote = Nexus.ri(0, 11);
+    let rNote = Nexus.ri(0, 11);
+    const rNoteButton = new Nexus.TextButton('#note', {'text': 'New Note'});
+    rNoteButton.on('change', (pressed) => {
+      // reevaluate to get a new pattern
+      if (pressed) {
+        rNote = Nexus.ri(0, 11);
+        const nText = document.getElementById('nText');
+        nText.innerHTML = rNote;
+      }
+    });
+
+    // pick a random instrument
+    let rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
+    const rSynthButton = new Nexus.TextButton('#synth', {'text': 'New Synth'});
+    rSynthButton.on('change', (pressed) => {
+      // reevaluate to get a new pattern
+      if (pressed) {
+        rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
+        const rSynthText = document.getElementById('rSynthText');
+        rSynthText.innerHTML = rSynth;
+      }
+    });
+
     console.log(`pattern: ${pattern.values}\n synth: ${rSynth}\n note: ${rNote}`);
     this.socket.on('beat', function (data) {
       // if the transport is running play a note each trigger
