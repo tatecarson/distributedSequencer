@@ -11,6 +11,7 @@ gulp.task('build-client', ['copy-assets', 'build-shared'], () =>
   gulp.src('src/client/js/client.js')
     .pipe(webpackStream({config: require('./webpack.config.js')}))
     .pipe(gulp.dest('dist/client/js'))
+
 );
 
 gulp.task('copy-assets', () =>

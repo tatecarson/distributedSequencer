@@ -22,6 +22,8 @@ export default class Chat {
     this.setupChat();
     this.setupEvents();
     this.setupSynth();
+
+    console.log('changf');
   }
 
   setupSocket () {
@@ -68,34 +70,37 @@ export default class Chat {
   }
 
   setupSynth () {
-    
     const bsynth = new Tone.Synth().toMaster();
     const amSynth = new Tone.AMSynth().toMaster();
     const fmSynth = new Tone.FMSynth().toMaster();
 
+    // create new synth
     const synth = new MakeSynth();
-    const players = 4;
-    const patterns = [];
-    // for (let i = 0; i < players; i++) {
-    //   patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
-    // }
-    patterns[0] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
-    // patterns[1] = synth.createPattern(5, 16);
-    // patterns[2] = synth.createPattern(3, 7);
+
+    // pick a random rhythm
+    let pattern = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    const patternButton = new Nexus.TextButton('#pattern', {'text': 'New Pattern'});
+    patternButton.on('change', (pressed) => {
+      // reevaluate to get a new pattern
+      if (pressed) {
+        pattern = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+        const pText = document.getElementById('pText');
+        pText.innerHTML = pattern.values;
+      }
+    });
+
+    // pick a random instrument
+    const rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
+    // pick random note
+    const rNote = Nexus.ri(0, 11);
+    console.log(`pattern: ${pattern.values}\n synth: ${rSynth}\n note: ${rNote}`);
     this.socket.on('beat', function (data) {
-      
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
         // play if pattern is a 1
-        if (patterns[0].next()) {
-          bsynth.triggerAttackRelease(Nexus.note(0), '8n', '@2n');
+        if (pattern.next()) {
+          rSynth.triggerAttackRelease(Nexus.note(rNote), '8n', '@2n');
         }
-        // if (patterns[1].next()) {
-        //   amSynth.triggerAttackRelease(Nexus.note(1, 1), '16n', '@2n');
-        // }
-        // if (patterns[2].next()) {
-        //   fmSynth.triggerAttackRelease(Nexus.note(7, -1), '8n', '@2n');
-        // }
         Tone.Transport.bpm.value = data.bpm;
       }
     });

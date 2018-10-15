@@ -1,11 +1,11 @@
 {
-	"folders": [
-		{
-			"path": "/Users/tatecarson/Documents/webDev/Tonejs/tone-testing"
-		},
-		{
-			"path": "."
-		}
-	],
+  "folders": [
+    {
+      "path": "/Users/tatecarson/Documents/webDev/Tonejs/tone-testing"
+    },
+    {
+      "path": "."
+    }
+  ],
   "settings": {}
 }
