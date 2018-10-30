@@ -4,12 +4,14 @@ import gulp from 'gulp';
 import webpackStream from 'webpack-stream';
 import nodemon from 'gulp-nodemon';
 import babel from 'gulp-babel';
+import changed from 'gulp-changed';
 
 gulp.task('build', ['build-client', 'build-server']);
 
 gulp.task('build-client', ['copy-assets', 'build-shared'], () =>
   gulp.src('src/client/js/client.js')
     .pipe(webpackStream({config: require('./webpack.config.js')}))
+    .pipe(changed('dist/client/js'))
     .pipe(gulp.dest('dist/client/js'))
 
 );
