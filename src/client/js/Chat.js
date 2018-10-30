@@ -3,9 +3,6 @@ import Nexus from 'nexusui';
 import {sanitizeString} from '../../shared/util';
 import MakeSynth from './MakeSynth';
 import Tone from 'Tone/core/Tone';
-import Synth from 'Tone/instrument/Synth';
-import AMSynth from 'Tone/instrument/AMSynth';
-import FMSynth from 'Tone/instrument/FMSynth';
 import Transport from 'Tone/core/Transport';
 
 export default class Chat {
@@ -22,8 +19,6 @@ export default class Chat {
     this.setupChat();
     this.setupEvents();
     this.setupSynth();
-
-    console.log('changf');
   }
 
   setupSocket () {
@@ -70,15 +65,22 @@ export default class Chat {
   }
 
   setupSynth () {
-    const bsynth = new Tone.Synth().toMaster();
-    const amSynth = new Tone.AMSynth().toMaster();
-    const fmSynth = new Tone.FMSynth().toMaster();
-
     // create new synth
     const synth = new MakeSynth();
+    const fmSynth = synth.FM().instrument;
+    const duoSynth = synth.duo().instrument;
+    const coolFM = synth.coolFM().instrument;
+    console.log(fmSynth, duoSynth, coolFM);
+    // const rShortSynth = Nexus.pick(bsynth, amSynth, fmSynth);
 
     // pick a random rhythm
     let pattern = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    const patterns = [];
+    // TODO: make players the actual amount of people logged on
+    const players = 8;
+    for (let i = 0; i < players; i++) {
+      patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    }
     const patternButton = new Nexus.TextButton('#pattern', {'text': 'New Pattern'});
     patternButton.on('change', (pressed) => {
       // reevaluate to get a new pattern
@@ -102,24 +104,38 @@ export default class Chat {
     });
 
     // pick a random instrument
-    let rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
-    const rSynthButton = new Nexus.TextButton('#synth', {'text': 'New Synth'});
-    rSynthButton.on('change', (pressed) => {
-      // reevaluate to get a new pattern
-      if (pressed) {
-        rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
-        const rSynthText = document.getElementById('rSynthText');
-        rSynthText.innerHTML = rSynth;
+    // let rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
+    // const rSynthButton = new Nexus.TextButton('#synth', {'text': 'New Synth'});
+    // rSynthButton.on('change', (pressed) => {
+    //   // reevaluate to get a new pattern
+    //   if (pressed) {
+    //     rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
+    //     const rSynthText = document.getElementById('rSynthText');
+    //     rSynthText.innerHTML = rSynth;
+    //   }
+    // });
+
+    let choosePattern = 0;
+    var tilt = new Nexus.Tilt('#tilt');
+    tilt.on('change', (v) => {
+      console.log(v);
+      if (v.z > 0.25 && v.z < 0.5) {
+        choosePattern = 1;
+      } else if (v.z > 0.5 && v.z < 0.75) {
+        choosePattern = 2;
+      } else if (v.z > 0.75 && v.z < 1) {
+        choosePattern = 3;
+      } else if (v.z > 0.0 && v.z < 0.25) {
+        choosePattern = 0;
       }
     });
 
-    console.log(`pattern: ${pattern.values}\n synth: ${rSynth}\n note: ${rNote}`);
     this.socket.on('beat', function (data) {
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
         // play if pattern is a 1
-        if (pattern.next()) {
-          rSynth.triggerAttackRelease(Nexus.note(rNote), '8n', '@2n');
+        if (patterns[choosePattern].next()) {
+          coolFM.triggerAttackRelease(Nexus.note(rNote), '8n', '@2n');
         }
         Tone.Transport.bpm.value = data.bpm;
       }
