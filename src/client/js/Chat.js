@@ -3,8 +3,6 @@ import Nexus from 'nexusui';
 import {sanitizeString} from '../../shared/util';
 import MakeSynth from './MakeSynth';
 import Tone from 'Tone/core/Tone';
-import Transport from 'Tone/core/Transport';
-
 export default class Chat {
   constructor (nick) {
     this.chatInput = document.getElementById('chatInput');
@@ -14,6 +12,7 @@ export default class Chat {
     this.nick = nick;
     this.socket = io({query: 'nick=' + nick});
     this.commands = {};
+    this.users = {};
 
     this.setupSocket();
     this.setupChat();
@@ -43,6 +42,7 @@ export default class Chat {
     });
 
     this.socket.on('userJoin', (data) => {
+      this.users.total = data.length;
       this.addSystemLine('<b>' + (data.nick.length < 1 ? 'Anon' : data.nick) + '</b> joined.');
     });
 
@@ -68,76 +68,84 @@ export default class Chat {
     // create new synth
     const synth = new MakeSynth();
     const fmSynth = synth.FM().instrument;
-    const duoSynth = synth.duo().instrument;
+    const duoSynth = synth.duo().instrument; // for drones
     const coolFM = synth.coolFM().instrument;
-    console.log(fmSynth, duoSynth, coolFM);
-    // const rShortSynth = Nexus.pick(bsynth, amSynth, fmSynth);
-
-    // pick a random rhythm
-    let pattern = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+    const rShortSynth = Nexus.pick(fmSynth, coolFM);
     const patterns = [];
-    // TODO: make players the actual amount of people logged on
-    const players = 8;
-    for (let i = 0; i < players; i++) {
-      patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
-    }
-    const patternButton = new Nexus.TextButton('#pattern', {'text': 'New Pattern'});
-    patternButton.on('change', (pressed) => {
-      // reevaluate to get a new pattern
-      if (pressed) {
-        pattern = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
-        const pText = document.getElementById('pText');
-        pText.innerHTML = pattern.values;
-      }
-    });
-
-    // pick random note
-    let rNote = Nexus.ri(0, 11);
-    const rNoteButton = new Nexus.TextButton('#note', {'text': 'New Note'});
-    rNoteButton.on('change', (pressed) => {
-      // reevaluate to get a new pattern
-      if (pressed) {
-        rNote = Nexus.ri(0, 11);
-        const nText = document.getElementById('nText');
-        nText.innerHTML = rNote;
-      }
-    });
-
-    // pick a random instrument
-    // let rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
-    // const rSynthButton = new Nexus.TextButton('#synth', {'text': 'New Synth'});
-    // rSynthButton.on('change', (pressed) => {
-    //   // reevaluate to get a new pattern
-    //   if (pressed) {
-    //     rSynth = Nexus.pick(bsynth, amSynth, fmSynth);
-    //     const rSynthText = document.getElementById('rSynthText');
-    //     rSynthText.innerHTML = rSynth;
-    //   }
-    // });
-
+    let part = 'shortSynth';
+    // const partPicker = new Nexus.RadioButton('#part', {'numberOfButtons': 2});
     let choosePattern = 0;
-    var tilt = new Nexus.Tilt('#tilt');
-    tilt.on('change', (v) => {
-      console.log(v);
-      if (v.z > 0.25 && v.z < 0.5) {
-        choosePattern = 1;
-      } else if (v.z > 0.5 && v.z < 0.75) {
-        choosePattern = 2;
-      } else if (v.z > 0.75 && v.z < 1) {
-        choosePattern = 3;
-      } else if (v.z > 0.0 && v.z < 0.25) {
-        choosePattern = 0;
+    let percNote = Nexus.note(0);
+    const droneNotes = new Nexus.Sequence([Nexus.note(9), Nexus.note(11), Nexus.note(1), Nexus.note(6), Nexus.note(7)]);
+    const tilt = new Nexus.Tilt('#tilt');
+    const transportToggle = new Nexus.Toggle('#startTransport');
+    let totalUsers = 0;
+
+    transportToggle.on('change', (v) => {
+      if (v) {
+        // Tone.Transport.start();
+        this.socket.emit('start', 'hi');
+      } else {
+        Tone.Transport.stop();
       }
+    });
+
+    this.socket.on('getParts', data => {
+      part = data;
+      console.log(part);
+    });
+
+    this.socket.on('getTotalUsers', data => {
+      totalUsers = data;
+      for (let i = 0; i < totalUsers; i++) {
+        patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
+      }
+      console.log(`total users: ${totalUsers}`);
     });
 
     this.socket.on('beat', function (data) {
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
-        // play if pattern is a 1
-        if (patterns[choosePattern].next()) {
-          coolFM.triggerAttackRelease(Nexus.note(rNote), '8n', '@2n');
+        if (part === 'shortSynth') {
+          console.log('got to short synth ');
+          // TODO: is this choosePattern going over the number of clients?
+          if (patterns[choosePattern % totalUsers].next()) {
+            const durations = Nexus.pick('8n', '16n', '8n.');
+            const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 1);
+
+            rShortSynth.triggerAttackRelease(percNote, durations, '@2n', velocity);
+          }
+        } else if (part === 'drone' && data.beat % 20 === 0) {
+          console.log('got to drone ');
+          const durations = Nexus.pick('1m', '1n', '2m');
+          const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 1);
+
+          duoSynth.triggerAttackRelease(droneNotes.next(), durations, '@2n', velocity);
         }
         Tone.Transport.bpm.value = data.bpm;
+      }
+    });
+
+    // update actions with deviceOrientation
+    tilt.on('change', (v) => {
+      // console.log(v);
+
+      if (v.z > 0.25 && v.z < 0.5) {
+        choosePattern = 1;
+        percNote = Nexus.note(0);
+        droneNotes.mode = 'up';
+      } else if (v.z > 0.5 && v.z < 0.75) {
+        choosePattern = 2;
+        percNote = Nexus.note(3);
+        droneNotes.mode = 'down';
+      } else if (v.z > 0.75 && v.z < 1) {
+        choosePattern = 3;
+        percNote = Nexus.note(5);
+        droneNotes.mode = 'drunk';
+      } else if (v.z > 0.0 && v.z < 0.25) {
+        percNote = Nexus.note(7);
+        droneNotes.mode = 'random';
+        choosePattern = 0;
       }
     });
   }

@@ -64,9 +64,23 @@ io.on('connection', function (socket) {
     console.log('[INFO] User ' + currentUser.nick + ' connected!');
     sockets[currentUser.id] = socket;
     users.push(currentUser);
-    io.emit('userJoin', { nick: currentUser.nick });
+    io.emit('userJoin', { nick: currentUser.nick, total: users.length });
     console.log('[INFO] Total users: ' + users.length);
   }
+
+  io.emit('getTotalUsers', users.length);
+
+  for (var i = 0; i < users.length; i++) {
+    console.log(users[i].id);
+    if (i % 2 === 0) {
+      console.log('even');
+      io.to(users[i].id).emit('getParts', 'shortSynth');
+    } else {
+      console.log('odd');
+      io.to(users[i].id).emit('getParts', 'drone');
+    }
+  }
+
   socket.on('start', function () {
     io.emit('start', 'hi');
   });
@@ -79,6 +93,7 @@ io.on('connection', function (socket) {
     if ((0, _util.findIndex)(users, currentUser.id) > -1) users.splice((0, _util.findIndex)(users, currentUser.id), 1);
     console.log('[INFO] User ' + currentUser.nick + ' disconnected!');
     socket.broadcast.emit('userDisconnect', { nick: currentUser.nick });
+    io.emit('getTotalUsers', users.length);
   });
 
   socket.on('userChat', function (data) {

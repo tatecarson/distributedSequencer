@@ -10,8 +10,8 @@ gulp.task('build', ['build-client', 'build-server']);
 
 gulp.task('build-client', ['copy-assets', 'build-shared'], () =>
   gulp.src('src/client/js/client.js')
-    .pipe(webpackStream({config: require('./webpack.config.js')}))
     .pipe(changed('dist/client/js'))
+    .pipe(webpackStream({config: require('./webpack.config.js')}))
     .pipe(gulp.dest('dist/client/js'))
 
 );
