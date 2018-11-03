@@ -4,36 +4,66 @@
     <meta charset="UTF-8">
     <title>ChatClient</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="css/main.css" />
+    <!-- <link rel="stylesheet" href="css/main.css" /> -->
+    <style>
+      .overlay {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      z-index: 1;
+      top: 0;
+      left: 0;
+      background-color: rgba(0, 0, 0, 0.9);
+      overflow-x: hidden;
+      transition: 0.5s;
+    }
+
+    .overlay-content {
+      position: relative;
+      top: 1%;
+      width: 100%;
+      text-align: center;
+      margin-top: 30px;
+      /* margin: 30px 20px 20px 20px;  */
+      /* padding: 5%;  */
+      color: #f1f1f1;
+    }
+
+    .remove-overlay {
+      background-color: #f8f8f8;
+      color: black
+    }
+
+    </style>
 </head>
 <body>
-    <div class="chatbox" id="chatbox">
-        <ul id="chatList" class="chat-list"></ul>
-        <input id="chatInput" type="text" class="chat-input" placeholder="Chat here..." maxlength="35" />
+    <div id="myNav" class="overlay">
+      <div class="overlay-content">
+        <!-- program notes -->
+       Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure quia, quae at neque voluptatem distinctio ut, sint adipisci blanditiis atque fugit perferendis enim consequuntur est doloremque. Neque nemo explicabo qui?
+      </div>
+      <div class="remove-overlay" onclick="closeNav()">
+        <!-- tap to start audio context -->
+        <p>
+          <h3>
+            TAP HERE TO START COMPOSING
+          </h3>
+        </p>
+      </div>
     </div>
-    <!-- <button id="startTransport">Start transport</button>
-     -->
-     Toggle Transport on and off. 
-     <div id="startTransport"></div>
-
-    <div id="startMenu">
-        <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="userNameInput" maxlength="25" />
-        <b class="input-error">Nick must be alphanumeric characters only!</b>
-        <br />
-        <a><button id="startButton">Chat</button></a>
-
-    </div>
+    Toggle Transport on and off.
+    <div id="startTransport"></div>
+    
     <div id="notes">
-      <div id="pattern"></div>
-      <div id="pText"></div>
-      Pick between drone and rhythm parts 
-      <div id="part"></div>
-      <div id="nText"></div>
-      <div id="synth"></div>
       <div id="rSynthText"></div>
       <div id="tilt"></div>
-    </div> 
-    now deployed?
+    </div>
+    <script>
+        function closeNav() {
+          document.getElementById("myNav").style.width = "0%";
+        }
+        console.log("update")
+      </script>
     <script src="js/client.js"></script>
 </body>
-</html>º
+</html>

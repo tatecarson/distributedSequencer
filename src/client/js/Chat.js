@@ -1,34 +1,20 @@
 import io from 'socket.io-client';
 import Nexus from 'nexusui';
-import {sanitizeString} from '../../shared/util';
 import MakeSynth from './MakeSynth';
+// import UnmuteButton from 'unmute';
 import Tone from 'Tone/core/Tone';
+import CtrlPattern from 'Tone/control/CtrlPattern';
+import kompas from 'kompas';
+import StartAudioContext from 'startaudiocontext';
 export default class Chat {
   constructor (nick) {
-    this.chatInput = document.getElementById('chatInput');
-    this.chatList = document.getElementById('chatList');
-    this.btn = document.getElementById('startTransport');
-
-    this.nick = nick;
-    this.socket = io({query: 'nick=' + nick});
-    this.commands = {};
-    this.users = {};
+    this.socket = io({ query: 'nick=' + nick });
 
     this.setupSocket();
-    this.setupChat();
-    this.setupEvents();
     this.setupSynth();
   }
 
   setupSocket () {
-    // start transport at the same time on all devices
-    this.socket.on('start', () => Tone.Transport.start());
-
-    this.socket.on('dong', () => {
-      this.latency = Date.now() - this.startPingTime;
-      this.addSystemLine('Ping: ' + this.latency + 'ms');
-    });
-
     this.socket.on('connect_failed', () => {
       this.socket.close();
     });
@@ -36,62 +22,67 @@ export default class Chat {
     this.socket.on('disconnect', () => {
       this.socket.close();
     });
-
-    this.socket.on('userDisconnect', (data) => {
-      this.addSystemLine('<b>' + (data.nick.length < 1 ? 'Anon' : data.nick) + '</b> disconnected.');
-    });
-
-    this.socket.on('userJoin', (data) => {
-      this.users.total = data.length;
-      this.addSystemLine('<b>' + (data.nick.length < 1 ? 'Anon' : data.nick) + '</b> joined.');
-    });
-
-    this.socket.on('serverSendUserChat', (data) => {
-      this.addChatLine(data.nick, data.message, false);
-    });
-  }
-
-  setupChat () {
-    this.registerCommand('ping', 'Check your latency.', () => {
-      this.checkLatency();
-    });
-
-    this.registerCommand('help', 'Information about the chat commands.', () => {
-      this.printHelp();
-    });
-
-    this.addSystemLine('Connected to the chat!');
-    this.addSystemLine('Type <b>/help</b> for a list of commands.');
   }
 
   setupSynth () {
-    // create new synth
+    let totalUsers = 0;
+    let part = 'shortSynth'; // starting part
+
+    // setup synths
     const synth = new MakeSynth();
     const fmSynth = synth.FM().instrument;
-    const duoSynth = synth.duo().instrument; // for drones
-    const coolFM = synth.coolFM().instrument;
-    const rShortSynth = Nexus.pick(fmSynth, coolFM);
+    // const coolFM = synth.coolFM().instrument;
+    // const rShortSynth = Nexus.pick(fmSynth, coolFM);
+    // const duoSynth = synth.duo().instrument; // for drones
+
+    const verb = new Tone.Freeverb({
+      roomSize: 0.5,
+      dampening: 1200,
+      wet: 0.5
+    }).toMaster();
+    const laDrone = new Tone.Player('../samples/burps/lalala_311.mp3').connect(verb);
+    let droneDur;
+    Tone.Buffer.on('load', () => {
+      droneDur = laDrone._buffer._buffer.duration;
+      console.log(`drone duration: ${droneDur}`);
+    });
+    // store patterns
     const patterns = [];
-    let part = 'shortSynth';
-    // const partPicker = new Nexus.RadioButton('#part', {'numberOfButtons': 2});
-    let choosePattern = 0;
-    let percNote = Nexus.note(0);
-    const droneNotes = new Nexus.Sequence([Nexus.note(9), Nexus.note(11), Nexus.note(1), Nexus.note(6), Nexus.note(7)]);
+    let patternIndex = 0;
+
+    // handle deviceorientation
     const tilt = new Nexus.Tilt('#tilt');
     const transportToggle = new Nexus.Toggle('#startTransport');
-    let totalUsers = 0;
 
-    transportToggle.on('change', (v) => {
-      if (v) {
-        // Tone.Transport.start();
-        this.socket.emit('start', 'hi');
-      } else {
-        Tone.Transport.stop();
-      }
+    // setup notes
+    let percussionNote = Nexus.note(0);
+    const droneNotes = new Tone.CtrlPattern([
+      Nexus.tune.ratio(9 - 1),
+      Nexus.tune.ratio(11 - 1),
+      Nexus.tune.ratio(1 - 1),
+      Nexus.tune.ratio(6 - 1),
+      Nexus.tune.ratio(7 - 1)
+    ], 'up');
+
+    StartAudioContext(Tone.context, '.remove-overlay').then(function () {
+      // started
+      console.log('started');
+    });
+    Tone.context.latencyHint = 'playback';
+
+    // receive data from server
+    //
+    // start transport at the same time on all devices
+    this.socket.on('start', () => {
+      Tone.Transport.start();
+    });
+    this.socket.on('stop', () => {
+      Tone.Transport.stop();
     });
 
     this.socket.on('getParts', data => {
       part = data;
+
       console.log(part);
     });
 
@@ -104,136 +95,109 @@ export default class Chat {
     });
 
     this.socket.on('beat', function (data) {
+      // set to drone for testing
+      // part = 'drone';
+      let droneLength = patterns[patternIndex % totalUsers].values.length;
+      console.log(`drone length: ${droneLength}`);
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
         if (part === 'shortSynth') {
           console.log('got to short synth ');
-          // TODO: is this choosePattern going over the number of clients?
-          if (patterns[choosePattern % totalUsers].next()) {
+
+          if (patterns[patternIndex % totalUsers].next()) {
             const durations = Nexus.pick('8n', '16n', '8n.');
             const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 1);
 
-            rShortSynth.triggerAttackRelease(percNote, durations, '@2n', velocity);
+            // TODO: add envelope from drone to percussionNote
+            fmSynth.triggerAttackRelease(
+              percussionNote,
+              durations,
+              '@2n',
+              velocity
+            );
           }
-        } else if (part === 'drone' && data.beat % 20 === 0) {
+        } else if (part === 'drone' && data.beat % droneLength === 0) {
           console.log('got to drone ');
-          const durations = Nexus.pick('1m', '1n', '2m');
-          const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 1);
-
-          duoSynth.triggerAttackRelease(droneNotes.next(), durations, '@2n', velocity);
+          console.log(`beat: ${data.beat} drone length: ${droneLength}`);
+          const durations = Nexus.pick('1m', '1m', '2m', '3m');
+          const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 0); // sometimes doesn't play
+          const offsets = Nexus.pick(0, 5, 10, 15);
+          // console.log(`drone length: ${data.beat % droneLength}, durations: ${durations}`);
+          // TODO: fix part so that it sounds better on phones - still lots of crackling
+          // duoSynth.triggerAttackRelease(
+          //   droneNotes.next(),
+          //   durations,
+          //   '@2n',
+          //   velocity
+          // );
+          laDrone.playbackRate = droneNotes.next();
+          laDrone.volume.rampTo(velocity, Nexus.rf(1, 3));
+          laDrone.fadeIn = Tone.Time(durations).toSeconds() / 2;
+          laDrone.fadeOut = Tone.Time(durations).toSeconds() / 3;
+          laDrone.start('@2n', offsets, durations);
+          // laDrone.volume.setValueCurveAtTime([-60, -15, -30], '@2n', durations);
         }
         Tone.Transport.bpm.value = data.bpm;
       }
     });
 
-    // update actions with deviceOrientation
-    tilt.on('change', (v) => {
-      // console.log(v);
-
-      if (v.z > 0.25 && v.z < 0.5) {
-        choosePattern = 1;
-        percNote = Nexus.note(0);
-        droneNotes.mode = 'up';
-      } else if (v.z > 0.5 && v.z < 0.75) {
-        choosePattern = 2;
-        percNote = Nexus.note(3);
-        droneNotes.mode = 'down';
-      } else if (v.z > 0.75 && v.z < 1) {
-        choosePattern = 3;
-        percNote = Nexus.note(5);
-        droneNotes.mode = 'drunk';
-      } else if (v.z > 0.0 && v.z < 0.25) {
-        percNote = Nexus.note(7);
-        droneNotes.mode = 'random';
-        choosePattern = 0;
-      }
-    });
-  }
-
-  setupEvents () {
-    this.chatInput.addEventListener('keypress', (key) => {
-      key = key.which || key.keyCode;
-
-      if (key === 13) {
-        this.sendChat(sanitizeString(this.chatInput.value));
-        this.chatInput.value = '';
-      }
-    });
-
-    this.chatInput.addEventListener('keyup', (key) => {
-      const synth = new Tone.Synth().toMaster();
-      key = key.which || key.keyCode;
-      if (key === 27) {
-        synth.triggerAttackRelease('a4');
-        this.chatInput.value = '';
-      }
-    });
-
-    this.btn.onclick = () => {
-      this.socket.emit('start', 'hi');
-      console.log('clicked');
-    };
-  }
-
-  sendChat (text) {
-    if (text) {
-      if (text.indexOf('/') === 0) {
-        let args = text.substring(1).split(' ');
-
-        if (this.commands[args[0]]) {
-          this.commands[args[0]].callback(args.slice(1));
-        } else {
-          this.addSystemLine('Unrecognized Command: ' + text + ', type /help for more info.');
-        }
+    // Nexus UI elements - do stuff that affects your sound and sends data to other clients
+    transportToggle.on('change', v => {
+      if (v) {
+        Tone.Transport.start();
+        this.socket.emit('start', 'hi');
       } else {
-        this.socket.emit('userChat', {nick: this.nick, message: text});
-        this.addChatLine(this.nick, text, true);
+        Tone.Transport.stop();
+        this.socket.emit('stop', 'please stop');
       }
-    }
-  }
+    });
 
-  addChatLine (name, message, me) {
-    let newline = document.createElement('li');
+    // update actions with deviceOrientation
+    tilt.on('change', v => {
+      // console.log(v);
+      // TODO: change to 8 positions
+      // add - upDown, downUp, alternateUp, randomOnce
+      if (v.z > 0.0 && v.z < 0.25) {
+        percussionNote = Nexus.note(7);
+        patternIndex = 0;
 
-    newline.className = (me) ? 'me' : 'friend';
-    newline.innerHTML = '<b>' + ((name.length < 1) ? 'Anon' : name) + '</b>: ' + message;
+        droneNotes.mode = 'up';
+        // laDrone.seek(0);
+      } else if (v.z > 0.25 && v.z < 0.5) {
+        patternIndex = 1;
+        percussionNote = Nexus.note(0);
+        droneNotes.mode = 'down';
+      } else if (v.z > 0.5 && v.z < 0.75) {
+        patternIndex = 2;
+        percussionNote = Nexus.note(3);
 
-    this.appendMessage(newline);
-  }
-
-  addSystemLine (message) {
-    let newline = document.createElement('li');
-
-    newline.className = 'system';
-    newline.innerHTML = message;
-
-    this.appendMessage(newline);
-  }
-
-  appendMessage (node) {
-    if (this.chatList.childNodes.length > 10) {
-      this.chatList.removeChild(this.chatList.childNodes[0]);
-    }
-    this.chatList.appendChild(node);
-  }
-
-  registerCommand (name, description, callback) {
-    this.commands[name] = {
-      description: description,
-      callback: callback
-    };
-  }
-
-  printHelp () {
-    for (let cmd in this.commands) {
-      if (this.commands.hasOwnProperty(cmd)) {
-        this.addSystemLine('/' + cmd + ': ' + this.commands[cmd].description);
+        droneNotes.mode = 'random';
+      } else if (v.z > 0.75 && v.z < 1) {
+        patternIndex = 3;
+        percussionNote = Nexus.note(5);
+        droneNotes.mode = 'randomWalk';
       }
-    }
-  }
+    });
+    // Get compass data
+    kompas()
+      .watch()
+      .on('heading', h => {
+        // console.log(`heading: ${h}`);
+        document.getElementById(
+          'rSynthText'
+        ).innerHTML = `this is the heading: ${h}`;
+        // heading = h;
+        const data = {
+          heading: h,
+          id: this.socket.id
+        };
+        this.socket.emit('heading', data);
+      });
 
-  checkLatency () {
-    this.startPingTime = Date.now();
-    this.socket.emit('ding');
+    this.socket.on('heading', data => {
+      const phones = Object.keys(data);
+      // console.log(phones[1]);
+      // console.log(JSON.stringify(data));
+    });
   }
 }

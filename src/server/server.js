@@ -51,6 +51,10 @@ io.on('connection', (socket) => {
     console.log('[INFO] Total users: ' + users.length);
   }
 
+  socket.on('heading', (data) => {
+    // console.log(data);
+    io.emit('heading', data);
+  });
   io.emit('getTotalUsers', users.length);
 
   for (let i = 0; i < users.length; i++) {
@@ -65,7 +69,12 @@ io.on('connection', (socket) => {
   }
 
   socket.on('start', () => {
-    io.emit('start', 'hi');
+    console.log('server got start message');
+    socket.broadcast.emit('start', 'hi');
+  });
+
+  socket.on('stop', () => {
+    socket.broadcast.emit('stop', 'stop ittt');
   });
 
   socket.on('ding', () => {

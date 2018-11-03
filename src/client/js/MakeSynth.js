@@ -3,6 +3,7 @@ import euclideanRhythms from 'euclidean-rhythms';
 import Tone from 'Tone/core/Tone';
 import { FMSynth } from 'Tone/instrument/FMSynth';
 import { DuoSynth } from 'Tone/instrument/DuoSynth';
+import { Player } from 'Tone/source/Player';
 import { Chebyshev } from 'Tone/effect/Chebyshev';
 import { FeedbackDelay } from 'Tone/effect/FeedbackDelay';
 import { Freeverb } from 'Tone/effect/Freeverb';
@@ -21,6 +22,11 @@ export default class MakeSynth {
     return seq;
   }
 
+  sampler (sample) {
+    const instrument = new Tone.Player(sample);
+    instrument.toMaster();
+    return instrument;
+  }
   FM () {
     // create synthz
     var instrument = new Tone.FMSynth();
@@ -62,8 +68,8 @@ export default class MakeSynth {
     effect2 = new Tone.FeedbackDelay();
     var effect2JSON = {
       delayTime: '8n',
-      feedback: 0.4,
-      wet: 0.5
+      feedback: 0.2,
+      wet: 0.4
     };
     effect2.set(effect2JSON);
 
@@ -147,8 +153,6 @@ export default class MakeSynth {
 
     instrument.set(synthJSON);
 
-    var effect1, effect2, effect3;
-
     // create effects
     var effect1 = new Tone.PitchShift();
     const effect1JSON = {
@@ -169,6 +173,7 @@ export default class MakeSynth {
     effect2.set(effect2JSON);
 
     // make connections
+    // instrument.toMaster();
     instrument.connect(effect1);
     effect1.connect(effect2);
     effect2.chain(Tone.Master);
