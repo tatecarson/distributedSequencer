@@ -100,6 +100,7 @@ export default class MakeSynth {
 
     return {
       instrument: instrument,
+      effect2: effect2,
       deep_dispose: deep_dispose
     };
   }

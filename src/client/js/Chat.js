@@ -1,7 +1,6 @@
 import io from 'socket.io-client';
 import Nexus from 'nexusui';
 import MakeSynth from './MakeSynth';
-// import UnmuteButton from 'unmute';
 import Tone from 'Tone/core/Tone';
 import CtrlPattern from 'Tone/control/CtrlPattern';
 import kompas from 'kompas';
@@ -26,11 +25,13 @@ export default class Chat {
 
   setupSynth () {
     let totalUsers = 0;
-    let part = 'shortSynth'; // starting part
+    let part = 'drone'; // starting part
 
     // setup synths
     const synth = new MakeSynth();
     const fmSynth = synth.FM().instrument;
+    const fmFeedbackDelay = synth.FM().effect2;
+    console.log(fmFeedbackDelay);
     // const coolFM = synth.coolFM().instrument;
     // const rShortSynth = Nexus.pick(fmSynth, coolFM);
     // const duoSynth = synth.duo().instrument; // for drones
@@ -40,12 +41,10 @@ export default class Chat {
       dampening: 1200,
       wet: 0.5
     }).toMaster();
+    // TODO: add more drone samples
     const laDrone = new Tone.Player('../samples/burps/lalala_311.mp3').connect(verb);
-    let droneDur;
-    Tone.Buffer.on('load', () => {
-      droneDur = laDrone._buffer._buffer.duration;
-      console.log(`drone duration: ${droneDur}`);
-    });
+    const laDrone2 = new Tone.Player('../samples/burps/lalala2_311.mp3').connect(verb);
+    let drone = laDrone;
     // store patterns
     const patterns = [];
     let patternIndex = 0;
@@ -56,13 +55,13 @@ export default class Chat {
 
     // setup notes
     let percussionNote = Nexus.note(0);
-    const droneNotes = new Tone.CtrlPattern([
+    const droneNotes = new Nexus.Sequence([
       Nexus.tune.ratio(9 - 1),
       Nexus.tune.ratio(11 - 1),
       Nexus.tune.ratio(1 - 1),
       Nexus.tune.ratio(6 - 1),
       Nexus.tune.ratio(7 - 1)
-    ], 'up');
+    ]);
 
     StartAudioContext(Tone.context, '.remove-overlay').then(function () {
       // started
@@ -98,7 +97,7 @@ export default class Chat {
       // set to drone for testing
       // part = 'drone';
       let droneLength = patterns[patternIndex % totalUsers].values.length;
-      console.log(`drone length: ${droneLength}`);
+      // console.log(`drone length: ${droneLength}`);
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
         if (part === 'shortSynth') {
@@ -108,7 +107,6 @@ export default class Chat {
             const durations = Nexus.pick('8n', '16n', '8n.');
             const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 1);
 
-            // TODO: add envelope from drone to percussionNote
             fmSynth.triggerAttackRelease(
               percussionNote,
               durations,
@@ -118,24 +116,16 @@ export default class Chat {
           }
         } else if (part === 'drone' && data.beat % droneLength === 0) {
           console.log('got to drone ');
-          console.log(`beat: ${data.beat} drone length: ${droneLength}`);
+
           const durations = Nexus.pick('1m', '1m', '2m', '3m');
           const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 0); // sometimes doesn't play
           const offsets = Nexus.pick(0, 5, 10, 15);
-          // console.log(`drone length: ${data.beat % droneLength}, durations: ${durations}`);
-          // TODO: fix part so that it sounds better on phones - still lots of crackling
-          // duoSynth.triggerAttackRelease(
-          //   droneNotes.next(),
-          //   durations,
-          //   '@2n',
-          //   velocity
-          // );
-          laDrone.playbackRate = droneNotes.next();
-          laDrone.volume.rampTo(velocity, Nexus.rf(1, 3));
-          laDrone.fadeIn = Tone.Time(durations).toSeconds() / 2;
-          laDrone.fadeOut = Tone.Time(durations).toSeconds() / 3;
-          laDrone.start('@2n', offsets, durations);
-          // laDrone.volume.setValueCurveAtTime([-60, -15, -30], '@2n', durations);
+
+          drone.playbackRate = droneNotes.next();
+          drone.volume.rampTo(velocity, Nexus.rf(1, 3));
+          drone.fadeIn = Tone.Time(durations).toSeconds() / 2;
+          drone.fadeOut = Tone.Time(durations).toSeconds() / 3;
+          drone.start('@2n', offsets, durations);
         }
         Tone.Transport.bpm.value = data.bpm;
       }
@@ -155,27 +145,53 @@ export default class Chat {
     // update actions with deviceOrientation
     tilt.on('change', v => {
       // console.log(v);
-      // TODO: change to 8 positions
-      // add - upDown, downUp, alternateUp, randomOnce
+      // TODO: check that these types are woring
+      // console.log(`type: ${droneNotes.type}, notes: ${droneNotes.values}`);
       if (v.z > 0.0 && v.z < 0.25) {
+        // fm
+        console.log('position 1');
         percussionNote = Nexus.note(7);
         patternIndex = 0;
+        fmFeedbackDelay.wet.rampTo(0.4, 1);
+        fmFeedbackDelay.feedback.rampTo(0.2, 1);
+        fmFeedbackDelay.delayTime.rampTo('8n', 2);
 
         droneNotes.mode = 'up';
-        // laDrone.seek(0);
+        drone = laDrone;
       } else if (v.z > 0.25 && v.z < 0.5) {
+        // fm
+        console.log('position 2');
         patternIndex = 1;
         percussionNote = Nexus.note(0);
+        fmFeedbackDelay.wet.rampTo(0.5, 1);
+        fmFeedbackDelay.feedback.rampTo(0.3, 1);
+        fmFeedbackDelay.delayTime.rampTo('32n', 2);
+
         droneNotes.mode = 'down';
+        drone = laDrone;
       } else if (v.z > 0.5 && v.z < 0.75) {
+        console.log('position 3');
+        // fm
         patternIndex = 2;
         percussionNote = Nexus.note(3);
+        fmFeedbackDelay.wet.rampTo(0.6, 1);
+        fmFeedbackDelay.feedback.rampTo(0, 1);
+        fmFeedbackDelay.delayTime.rampTo('4n', 2);
 
-        droneNotes.mode = 'random';
+        droneNotes.mode = 'drunk';
+        drone = laDrone2;
       } else if (v.z > 0.75 && v.z < 1) {
+        console.log('position 4');
+        // fm
         patternIndex = 3;
         percussionNote = Nexus.note(5);
-        droneNotes.mode = 'randomWalk';
+        fmFeedbackDelay.wet.rampTo(0, 1);
+        fmFeedbackDelay.feedback.rampTo(0.1, 1);
+        fmFeedbackDelay.delayTime.rampTo('8n.', 2);
+        fmFeedbackDelay.delayTime.rampTo('2n.', 2);
+
+        droneNotes.mode = 'random';
+        drone = laDrone2;
       }
     });
     // Get compass data
