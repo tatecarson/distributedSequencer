@@ -5,6 +5,9 @@ import Tone from 'Tone/core/Tone';
 import CtrlPattern from 'Tone/control/CtrlPattern';
 import kompas from 'kompas';
 import StartAudioContext from 'startaudiocontext';
+import mobileConsole from 'js-mobile-console';
+
+mobileConsole.show();
 export default class Chat {
   constructor (nick) {
     this.socket = io({ query: 'nick=' + nick });
@@ -45,6 +48,8 @@ export default class Chat {
     const laDrone = new Tone.Player('../samples/burps/lalala_311.mp3').connect(verb);
     const laDrone2 = new Tone.Player('../samples/burps/lalala2_311.mp3').connect(verb);
     let drone = laDrone;
+
+    const breath = new Tone.Player('../samples/burps/breath_1_var.mp3').connect(verb);
     // store patterns
     const patterns = [];
     let patternIndex = 0;
@@ -149,7 +154,7 @@ export default class Chat {
       // console.log(`type: ${droneNotes.type}, notes: ${droneNotes.values}`);
       if (v.z > 0.0 && v.z < 0.25) {
         // fm
-        console.log('position 1');
+        // console.log('position 1');
         percussionNote = Nexus.note(7);
         patternIndex = 0;
         fmFeedbackDelay.wet.rampTo(0.4, 1);
@@ -160,7 +165,7 @@ export default class Chat {
         drone = laDrone;
       } else if (v.z > 0.25 && v.z < 0.5) {
         // fm
-        console.log('position 2');
+        // console.log('position 2');
         patternIndex = 1;
         percussionNote = Nexus.note(0);
         fmFeedbackDelay.wet.rampTo(0.5, 1);
@@ -170,7 +175,7 @@ export default class Chat {
         droneNotes.mode = 'down';
         drone = laDrone;
       } else if (v.z > 0.5 && v.z < 0.75) {
-        console.log('position 3');
+        // console.log('position 3');
         // fm
         patternIndex = 2;
         percussionNote = Nexus.note(3);
@@ -181,7 +186,7 @@ export default class Chat {
         droneNotes.mode = 'drunk';
         drone = laDrone2;
       } else if (v.z > 0.75 && v.z < 1) {
-        console.log('position 4');
+        // console.log('position 4');
         // fm
         patternIndex = 3;
         percussionNote = Nexus.note(5);
@@ -195,25 +200,68 @@ export default class Chat {
       }
     });
     // Get compass data
+    let heading;
     kompas()
       .watch()
       .on('heading', h => {
         // console.log(`heading: ${h}`);
         document.getElementById(
           'rSynthText'
-        ).innerHTML = `this is the heading: ${h}`;
-        // heading = h;
+        ).innerHTML = `
+        <p>my id is: ${this.socket.id}</p>
+        <p>
+          this is the heading: ${h}
+        </p>`;
+        heading = h;
         const data = {
           heading: h,
           id: this.socket.id
         };
-        this.socket.emit('heading', data);
+        this.socket.emit('heading', h);
       });
 
     this.socket.on('heading', data => {
-      const phones = Object.keys(data);
-      // console.log(phones[1]);
-      // console.log(JSON.stringify(data));
+      // console.table(data);
+      let flag = true;
+      for (let i = 0; i < data.length; i++) {
+        // TODO: only matching with one other client at a time
+        if ((Math.abs(heading - data[i].heading) > 150) && (Math.abs(heading - data[i].heading)) < 210) {
+          console.log(`i match with: ${data[i].id}`);
+          // print to the DOM here to see headings away from magnets
+          // TODO: switch all of these documents to console.logs
+          const h = document.querySelector('#heading');
+          h.innerHTML = `<p>
+          i match with: ${data[i].id} at heading: ${data[i].heading}
+          </p>`;
+
+          // 2. emit to the matching id to play a sound
+          // TODO: play sound on first device
+          // TODO: setup boolean flag so that the sound only happens the first time we see matching headings
+
+          let index = 0;
+          if (flag) {
+            flag = false;
+            index++;
+            const flagLog = document.querySelector('#headingMatch');
+            flagLog.innerHTML = `<p>
+              reading heading flag ${index}x
+            </p>`;
+            // fmSynth.triggerAttackRelease('c4', '8n');
+            breath.start();
+            console.log('reached heading flag, should only happen once');
+          } else {
+            index = 0;
+          }
+          // TODO: emit to matching id and play sound on that device
+        } else {
+          const h = document.querySelector('#heading');
+          h.innerHTML = `<p>
+           looking for a match
+          </p>`;
+          flag = true;
+        }
+      }
+      console.log(flag);
     });
   }
 }

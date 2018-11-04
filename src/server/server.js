@@ -33,9 +33,10 @@ app.use(express['static'](__dirname + '/../client'));
 
 io.on('connection', (socket) => {
   let nick = socket.handshake.query.nick;
+  let heading;
   let currentUser = {
     id: socket.id,
-    nick: nick
+    heading: heading
   };
 
   if (findIndex(users, currentUser.id) > -1) {
@@ -53,7 +54,8 @@ io.on('connection', (socket) => {
 
   socket.on('heading', (data) => {
     // console.log(data);
-    io.emit('heading', data);
+    currentUser.heading = data;
+    io.emit('heading', users);
   });
   io.emit('getTotalUsers', users.length);
 

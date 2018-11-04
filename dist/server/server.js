@@ -50,9 +50,10 @@ app.use(_express2.default['static'](__dirname + '/../client'));
 
 io.on('connection', function (socket) {
   var nick = socket.handshake.query.nick;
+  var heading = void 0;
   var currentUser = {
     id: socket.id,
-    nick: nick
+    heading: heading
   };
 
   if ((0, _util.findIndex)(users, currentUser.id) > -1) {
@@ -70,7 +71,8 @@ io.on('connection', function (socket) {
 
   socket.on('heading', function (data) {
     // console.log(data);
-    io.emit('heading', data);
+    currentUser.heading = data;
+    io.emit('heading', users);
   });
   io.emit('getTotalUsers', users.length);
 
