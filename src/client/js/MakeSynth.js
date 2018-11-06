@@ -261,8 +261,8 @@ export default class MakeSynth {
     // make connections
     instrument.connect(effect1);
     effect1.connect(effect2);
-    effect2.connect(effect3);
-    effect3.connect(Tone.Master);
+    // effect2.connect(effect3);
+    effect2.connect(Tone.Master);
 
     // define deep dispose function
     function deep_dispose () {
@@ -288,5 +288,31 @@ export default class MakeSynth {
       instrument: instrument,
       deep_dispose: deep_dispose
     };
+  }
+
+  hackFM () {
+    return new Tone.FMSynth({
+      'harmonicity': 4,
+      'modulationIndex': Nexus.ri(10) + 2,
+      'detune': 0,
+      'oscillator': {
+        'type': 'sine'
+      },
+      'envelope': {
+        'attack': 0.003,
+        'decay': 0.1,
+        'sustain': 2,
+        'release': 5
+      },
+      'modulation': {
+        'type': 'square'
+      },
+      'modulationEnvelope': {
+        'attack': 0.02,
+        'decay': 0.08,
+        'sustain': 0.3,
+        'release': 0.5
+      }
+    });
   }
 }

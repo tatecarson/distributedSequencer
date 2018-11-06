@@ -86,7 +86,9 @@ io.on('connection', function (socket) {
       io.to(users[i].id).emit('getParts', 'drone');
     }
   }
-
+  socket.on('headingMatch', function (user) {
+    io.to(user).emit('headingMatch', 'we have a match');
+  });
   socket.on('start', function () {
     console.log('server got start message');
     socket.broadcast.emit('start', 'hi');
