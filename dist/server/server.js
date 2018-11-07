@@ -55,7 +55,7 @@ io.on('connection', function (socket) {
     id: socket.id,
     heading: heading
   };
-
+  var userList = [];
   if ((0, _util.findIndex)(users, currentUser.id) > -1) {
     console.log('[INFO] User ID is already connected, kicking.');
     socket.disconnect();
@@ -65,6 +65,7 @@ io.on('connection', function (socket) {
     console.log('[INFO] User ' + currentUser.nick + ' connected!');
     sockets[currentUser.id] = socket;
     users.push(currentUser);
+    userList.push(currentUser.id);
     io.emit('userJoin', { nick: currentUser.nick, total: users.length });
     console.log('[INFO] Total users: ' + users.length);
   }
@@ -74,7 +75,7 @@ io.on('connection', function (socket) {
     currentUser.heading = data;
     io.emit('heading', users);
   });
-  io.emit('getTotalUsers', users.length);
+  io.emit('getTotalUsers', users.length, userList);
 
   for (var i = 0; i < users.length; i++) {
     console.log(users[i].id);
@@ -86,8 +87,9 @@ io.on('connection', function (socket) {
       io.to(users[i].id).emit('getParts', 'drone');
     }
   }
-  socket.on('headingMatch', function (user) {
-    io.to(user).emit('headingMatch', 'we have a match');
+  socket.on('headingMatch', function (user, i) {
+    // TODO: only send to other phone
+    io.to(user).emit('headingMatch', i);
   });
   socket.on('start', function () {
     console.log('server got start message');
