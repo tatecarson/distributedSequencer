@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build": "gulp",
-    "start": "webpack-dev-server --mode development --open",
+    "start": "node dist/server/server",
     "deploy": "now && now alias"
   },
   "author": "Hagen Sommerkorn <hagen.sommerkorn@gmail.com> (https://github.com/riebel)",
