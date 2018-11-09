@@ -30,7 +30,7 @@ var io = new _socket2.default(server);
 var port = process.env.PORT || 3000;
 var users = [];
 var sockets = {};
-var link = new _abletonlink2.default(240, 4);
+var link = new _abletonlink2.default(280, 4);
 
 app.use((0, _compression2.default)({}));
 app.use(_express2.default['static'](__dirname + '/../client'));

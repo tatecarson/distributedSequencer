@@ -13,7 +13,7 @@ const io = new SocketIO(server);
 const port = process.env.PORT || 3000;
 const users = [];
 const sockets = {};
-const link = new abletonlink(240, 4);
+const link = new abletonlink(280, 4);
 
 app.use(compression({}));
 app.use(express['static'](__dirname + '/../client'));

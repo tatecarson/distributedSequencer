@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ChatClient</title>
+    <title>Mesh Garden</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-    <!-- <link rel="stylesheet" href="css/main.css" /> -->
     <link rel="stylesheet" href="css/mobile-console.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
     <style>
       .overlay {
       height: 100%;
@@ -25,8 +26,6 @@
       width: 100%;
       text-align: center;
       margin-top: 30px;
-      /* margin: 30px 20px 20px 20px;  */
-      /* padding: 5%;  */
       color: #f1f1f1;
     }
 
@@ -35,38 +34,53 @@
       color: black
     }
 
+    #tilt {
+      display: none; 
+    }
+  
     </style>
 </head>
 <body>
+  <div class="san-serif">
+  
     <div id="myNav" class="overlay">
       <div class="overlay-content">
         <!-- program notes -->
-       Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure quia, quae at neque voluptatem distinctio ut, sint adipisci blanditiis atque fugit perferendis enim consequuntur est doloremque. Neque nemo explicabo qui?
+        <p class="f2">
+          Mesh Garden  
+        </p>
+        <p>
+          Turn and face your neighbors, notice how the sound changes.
+        </p>
       </div>
       <div class="remove-overlay" onclick="closeNav()">
         <!-- tap to start audio context -->
-        <p>
-          <h3>
-            TAP HERE TO START COMPOSING
-          </h3>
+        <p class="f3 tc">
+          TAP HERE TO START COMPOSING
         </p>
       </div>
     </div>
-    Toggle Transport on and off.
+    <p class="f3 tc">
+      Toggle Transport on and off.
+    </p>
     <div id="startTransport"></div>
-    
+  
     <div id="notes">
       <div id="rSynthText"></div>
       <div id="tilt"></div>
       <div id="heading"></div>
       <div id="headingMatch"></div>
     </div>
-    <script>
-        function closeNav() {
-          document.getElementById("myNav").style.width = "0%";
-        }
-        console.log("update")
-      </script>
-    <script src="js/client.js"></script>
+    <div class="heading-container f3 tc">
+      <div id="d">This is a div.</div>
+    </div>
+  </div>
+  <script>
+    function closeNav() {
+      document.getElementById("myNav").style.width = "0%";
+    }
+    console.log("update")
+  </script>
+  <script src="js/client.js"></script>
 </body>
 </html>
