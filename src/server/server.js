@@ -74,9 +74,12 @@ io.on('connection', (socket) => {
     // TODO: only send to other phone
     io.to(user).emit('headingMatch', i);
   });
+
+  // emit when user restarts with toggle
+  // or clicks 'tap to start composing'
   socket.on('start', () => {
     console.log('server got start message');
-    socket.broadcast.emit('start', 'hi');
+    io.emit('start', 'hi');
   });
 
   socket.on('stop', () => {

@@ -39,13 +39,10 @@ export default class Chat {
     const synth = new MakeSynth();
 
     // short sounds
-    // const fmSynth = synth.FM().instrument;
     const perc1 = new Tone.Player('../samples/perc/perc_1.mp3').connect(verb);
     const perc2 = new Tone.Player('../samples/perc/perc_2.mp3').connect(verb);
 
     const mallet1 = new Tone.Player('../samples/perc/kalimba.mp3').connect(verb);
-    // const hackFM = synth.hackFM().connect(verb);
-    // fmSynth.chain(comp, verb);
 
     const rShortSynth = Nexus.pick(perc1, perc2, mallet1);
 
@@ -64,7 +61,8 @@ export default class Chat {
 
     // handle deviceorientation
     const tilt = new Nexus.Tilt('#tilt');
-    const transportToggle = new Nexus.Toggle('#startTransport');
+    const muteToggle = new Nexus.Toggle('#startTransport');
+    muteToggle.state = true;
 
     // Get compass data
     let heading;
@@ -99,13 +97,17 @@ export default class Chat {
       // started
       console.log('started');
     });
+
+    document.getElementById('restart').addEventListener('click', () => this.socket.emit('start', 'hi'));
     Tone.context.latencyHint = 'playback';
 
     // receive data from server
     //
     // start transport at the same time on all devices
+    // stop first if already running
     this.socket.on('start', () => {
-      Tone.Transport.start();
+      Tone.Transport.stop().start();
+      console.log(`Transport state: ${Tone.Transport.state}, restarted?`);
       bowedGlass.mute = false;
     });
     this.socket.on('stop', () => {
@@ -131,7 +133,7 @@ export default class Chat {
 
     this.socket.on('beat', function (data) {
       // set to drone for testing
-      // part = 'drone';
+      // part = 'shortSynth';
       let droneLength = patterns[patternIndex % totalUsers].values.length;
       // console.log(`drone length: ${droneLength}`);
       // if the transport is running play a note each trigger
@@ -162,13 +164,16 @@ export default class Chat {
     });
 
     // Nexus UI elements - do stuff that affects your sound and sends data to other clients
-    transportToggle.on('change', v => {
+    muteToggle.on('change', v => {
       if (v) {
-        Tone.Transport.start();
+        Tone.Master.mute = false;
+
+        // restart everyone's transports if you log back on
         this.socket.emit('start', 'hi');
       } else {
         Tone.Transport.stop();
-        this.socket.emit('stop', 'please stop');
+        Tone.Master.mute = true;
+        // this.socket.emit('stop', 'please stop');
       }
     });
 
