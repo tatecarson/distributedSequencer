@@ -72,7 +72,6 @@ io.on('connection', (socket) => {
     }
   }
   socket.on('headingMatch', (user, i) => {
-    // TODO: only send to other phone
     io.to(user).emit('headingMatch', i);
   });
 

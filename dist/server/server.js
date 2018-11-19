@@ -89,7 +89,6 @@ io.on('connection', function (socket) {
     }
   }
   socket.on('headingMatch', function (user, i) {
-    // TODO: only send to other phone
     io.to(user).emit('headingMatch', i);
   });
 

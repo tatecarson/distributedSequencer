@@ -250,8 +250,6 @@ export default class Chat {
 
       document.getElementById('heading-match').style.width = '100%';
     });
-
-    // TODO: something happens visually when headings match
   }
 
   bgAnimate (heading) {
