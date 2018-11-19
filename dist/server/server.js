@@ -53,7 +53,8 @@ io.on('connection', function (socket) {
   var heading = void 0;
   var currentUser = {
     id: socket.id,
-    heading: heading
+    heading: heading,
+    nick: nick
   };
   var userList = [];
   if ((0, _util.findIndex)(users, currentUser.id) > -1) {
@@ -71,7 +72,7 @@ io.on('connection', function (socket) {
   }
 
   socket.on('heading', function (data) {
-    // console.log(data);
+    console.log(currentUser.nick);
     currentUser.heading = data;
     io.emit('heading', users);
   });

@@ -36,7 +36,8 @@ io.on('connection', (socket) => {
   let heading;
   let currentUser = {
     id: socket.id,
-    heading: heading
+    heading: heading,
+    nick: nick
   };
   let userList = [];
   if (findIndex(users, currentUser.id) > -1) {
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
   }
 
   socket.on('heading', (data) => {
-    // console.log(data);
+    console.log(currentUser.nick);
     currentUser.heading = data;
     io.emit('heading', users);
   });

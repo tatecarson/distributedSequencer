@@ -52,8 +52,12 @@
         <p>
           Turn and face your neighbors, notice how the sound changes.
         </p>
+        <p> 
+          Please enter your name below
+        </p>
+        <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="userNameInput" maxlength="25" />
       </div>
-      <div class="remove-overlay" id="restart" onclick="closeNav()">
+      <div class="remove-overlay" id="restart">
         <!-- tap to start audio context -->
         <p class="f3 tc">
           TAP HERE TO START COMPOSING
@@ -71,14 +75,31 @@
       <div id="heading"></div>
       <div id="headingMatch"></div>
     </div>
-    <div class="heading-container f3 tc">
-      <div id="d">This is a div.</div>
+
+    <div id="heading-match" class="overlay" style="width: 0%">
+      <div class="overlay-content">
+  
+        <p class="f2" id="match-name">
+          <!-- fill with match in Chat.js -->
+        </p>
+      </div>
+      <div class="remove-overlay" id="continue">
+        <!-- tap to continue -->
+        <p class="f3 tc">
+          continue 
+        </p>
+      </div>
+
     </div>
   </div>
   <script>
-    function closeNav() {
-      document.getElementById("myNav").style.width = "0%";
-    }
+    // function closeNav() {
+    //   document.getElementById("myNav").style.width = "0%";
+    // }
+
+    document.getElementById("continue").addEventListener("click", () => {
+      document.getElementById("heading-match").style.width = "0%";
+    })
     console.log("update")
   </script>
   <script src="js/client.js"></script>

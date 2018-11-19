@@ -8,12 +8,12 @@ import mobileConsole from 'js-mobile-console';
 import interpolate from 'color-interpolate';
 
 // mobile console.log
-// mobileConsole.show();
+mobileConsole.show();
 export default class Chat {
   constructor (nick) {
+    this.nick = nick;
     this.socket = io({ query: 'nick=' + nick });
-    this.position = document.getElementById('d');
-    console.log(this.position);
+
     this.setupSocket();
     this.setupSynth();
   }
@@ -234,6 +234,11 @@ export default class Chat {
             // console.log(`myindex: ${myIndex}`);
             this.socket.emit('headingMatch', data[i].id);
           }
+
+          // match modal
+          document.getElementById('match-name').innerHTML = `
+            you match with: ${data[i].nick}
+          `;
         }
       }
     });
@@ -242,7 +247,11 @@ export default class Chat {
       console.log(`playing pitch ${index}`);
       bowedGlass.playbackRate = headingNotes[Math.floor(Math.random() * headingNotes.length)];
       bowedGlass.start();
+
+      document.getElementById('heading-match').style.width = '100%';
     });
+
+    // TODO: something happens visually when headings match
   }
 
   bgAnimate (heading) {
