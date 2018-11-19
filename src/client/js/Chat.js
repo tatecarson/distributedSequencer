@@ -98,7 +98,10 @@ export default class Chat {
       console.log('started');
     });
 
-    document.getElementById('restart').addEventListener('click', () => this.socket.emit('start', 'hi'));
+    document.getElementById('restart').addEventListener('click', () => {
+      this.socket.emit('start', 'hi');
+      document.getElementById('myNav').style.width = '0%';
+    });
     Tone.context.latencyHint = 'playback';
 
     // receive data from server

@@ -6,9 +6,8 @@ class Client {
     // this.chat = new Chat(this.nick);
     let userNameInput = document.getElementById('userNameInput');
 
-    document.getElementById('restart').onclick = () => {
+    document.getElementById('submit-user').onclick = () => {
       this.startChat(userNameInput.value);
-      document.getElementById('myNav').style.width = '0%';
     };
 
     console.log(userNameInput.value);
