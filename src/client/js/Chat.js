@@ -229,61 +229,28 @@ export default class Chat {
       this.bgAnimate(v.z);
     });
 
-    let timeToResume = 0;
-
-    // checking for a match
-    // send to server
-
-    // TODO: move this to the serverside so you can check them all at once
-    this.socket.on('heading', data => {
-      for (let i = 0; i < data.length; i++) {
-        if ((Math.abs(heading - data[i].heading) > 160 && Math.abs(heading - data[i].heading) < 200)) {
-          if (Tone.now() > timeToResume) {
-            // check every 3 seconds
-            timeToResume = Tone.now() + 3;
-
-            // TODO: instead of sending percussion note, send the note you play when the headings match
-            // a player can collect those notes so a certain melody plays when they match someone
-            // the player can choose to take the note or not if the coin flip is in their favor
-            // figure out another system of game play later to decide who gets to take the note
-
-            this.socket.emit('headingMatch', data[i].id, myHeadingNotes, Math.floor(Math.random() * 2));
-          }
-
-          // match modal
-          document.getElementById('match-name').innerHTML = `
-            <p class="f2">
-              you match with: ${data[i].nick}
-            </p>`;
-        }
-      }
-    });
-
     // got a match
     // do things on client
-    this.socket.on('headingMatch', (user, matchingNotes, coin) => {
-      console.log(user, matchingNotes, coin);
-      // if coin is true client has the option of taking notes
-      // console.log(`matchingNotes: ${matchingNotes}`);
-
+    this.socket.on('headingMatch', (matchID, matchName, matchingNotes) => {
+      // console.log(user, matchingNotes, coin);
+      document.getElementById('match-name').innerHTML = `
+      <p class="f2">
+        you match with: ${matchName}
+      </p>`;
       // if you are out of notes, nothing happens
       if (myHeadingNotes.length === 0) {
-        document.getElementById('match-note').innerHTML = ` 
+        document.getElementById('match-note').innerHTML = `
         <p class="f2">
-          i'm sorry, you are out of notes. Match with another player to get a note to play. 
+          i'm sorry, you are out of notes. Match with another player to get a note to play.
         </p>`;
       } else {
-        // FIXME: this element should sometimes not pop up, why is it always happening?
-        // always play a note, but if coin is true give ability to steal note
-        // matchingNotes = 'noTrade';
-        if (coin === 0) {
-          console.log('trade');
-          document.getElementById('match-note').innerHTML = ` 
-            <p>
-              coin is ${coin}
-            </p>
+        if (matchingNotes) {
+          // send to loser and tell them what's being stolen
+          this.socket.emit('steal', matchID);
+          document.getElementById('match-note').innerHTML = `
+
             <p class="f2">
-              they're playing ${matchingNotes}. 
+              they're playing ${matchingNotes}.
               would you like to add one of their notes to your note bank?
             </p>`;
         }
@@ -292,6 +259,16 @@ export default class Chat {
         bowedGlass.start();
       }
 
+      document.getElementById('heading-match').style.width = '100%';
+    });
+
+    this.socket.on('steal', (stealer) => {
+      document.getElementById('match-note').innerHTML = `
+  
+      <p class="f2">
+        ${stealer} is stealing your note.
+       
+      </p>`;
       document.getElementById('heading-match').style.width = '100%';
     });
   }

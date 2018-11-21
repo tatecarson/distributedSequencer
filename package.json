@@ -17,6 +17,8 @@
     "euclidean-rhythms": "^2.0.1",
     "express": "^4.13.4",
     "kompas": "0.0.1",
+    "lodash.debounce": "^4.0.8",
+    "lodash.throttle": "^4.1.1",
     "nexusui": "^2.0.7",
     "nice-color-palettes": "^2.0.0",
     "p5": "^0.7.2",
