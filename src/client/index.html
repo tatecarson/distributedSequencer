@@ -1,64 +1,68 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Mesh Garden</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-    <link rel="stylesheet" href="css/mobile-console.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
-    <style>
-      .overlay {
-      height: 100%;
-      width: 100%;
-      position: fixed;
-      z-index: 1;
-      top: 0;
-      left: 0;
-      background-color: rgba(0, 0, 0, 0.9);
-      overflow-x: hidden;
-      transition: 0.5s;
-    }
-
-    .overlay-content {
-      position: relative;
-      top: 1%;
-      width: 100%;
-      text-align: center;
-      margin-top: 30px;
-      color: #f1f1f1;
-    }
-
-    .remove-overlay {
-      background-color: #f8f8f8;
-      color: black
-    }
-
-    #tilt {
-      display: none; 
-    }
-  
-    </style>
+  <meta charset="UTF-8">
+  <title>Mesh Garden</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="css/mobile-console.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css" />
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css"> -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-  <div class="san-serif">
   
-    <div id="myNav" class="overlay">
-      <div class="overlay-content">
-        <!-- program notes -->
-        <p class="f2">
-          Mesh Garden  
-        </p>
-        <p>
-          Turn and face your neighbors, notice how the sound changes.
-        </p>
-        <p> 
-          Please enter your name below
-        </p>
-        <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="userNameInput" maxlength="25" />
-        <button type="button" id="submit-user">Submit Name</button>
+  
+  <div class="san-serif container">
+    <canvas class="layer-1"></canvas>
+    <div class="layer-2">
+      <!-- 
+      <p class="f3 tc">
+        Mute Button
+      </p> -->
+      <div id="startTransport"></div>
+      <div id="welcome" class="f3 tc"></div>
+  
+      <div id="notes">
+        <div id="tilt"></div>
       </div>
-     
+  
+      <div id="d"></div>
+      <div id="heading-match" class="overlay" style="width: 0%">
+        <div class="overlay-content">
+  
+          <div id="match">
+            <div id="match-name"></div>
+            <div id="match-note"></div>
+            <div id="no-notes"></div>
+          </div>
+    
+        </div>
+        <div class="remove-overlay" id="continue">
+          <!-- tap to continue -->
+          <p class="f3 tc">
+            continue
+          </p>
+        </div>
+      </div>
+
+      <div id="myNav" class="overlay">
+        <div class="overlay-content">
+          <!-- program notes -->
+          <p class="f2">
+            Mesh Garden
+          </p>
+          <p>
+            Turn and face your neighbors, notice how the sound changes.
+          </p>
+          <p>
+            Please enter your name below
+          </p>
+          <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="userNameInput" maxlength="25" />
+          <button type="button" id="submit-user">Submit Name</button>
+        </div>
+
 
         <div class="remove-overlay" id="restart">
           <!-- tap to start audio context -->
@@ -66,45 +70,20 @@
             TAP HERE TO START COMPOSING
           </p>
         </div>
-     
-    </div>
-    <p class="f3 tc">
-      Mute Button
-    </p>
-
-    <div id="startTransport"></div>
-  
-    <div id="notes">
-      <div id="rSynthText"></div>
-      <div id="tilt"></div>
-      <div id="heading"></div>
-      <div id="headingMatch"></div>
-    </div>
-
-    <div id="d"></div>
-    <div id="heading-match" class="overlay" style="width: 0%">
-      <div class="overlay-content">
-  
-        <p class="f2" id="match-name">
-          <!-- fill with match in Chat.js -->
-        </p>
-      </div>
-      <div class="remove-overlay" id="continue">
-        <!-- tap to continue -->
-        <p class="f3 tc">
-          continue 
-        </p>
       </div>
 
+
     </div>
-  </div>
-  <script>
- 
-   document.getElementById("continue").addEventListener("click", () => {
-      document.getElementById("heading-match").style.width = "0%";
-    })
-    console.log("update")
-  </script>
-  <script src="js/client.js"></script>
+
+
+    <script>
+
+      document.getElementById("continue").addEventListener("click", () => {
+        document.getElementById("heading-match").style.width = "0%";
+      })
+      console.log("update")
+    </script>
+    <script src="js/client.js"></script>
 </body>
+
 </html>

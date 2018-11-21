@@ -6,6 +6,7 @@ import kompas from 'kompas';
 import StartAudioContext from 'startaudiocontext';
 import mobileConsole from 'js-mobile-console';
 import interpolate from 'color-interpolate';
+import animation from './animation';
 
 // mobile console.log
 mobileConsole.show();
@@ -16,6 +17,8 @@ export default class Chat {
 
     this.setupSocket();
     this.setupSynth();
+
+    animation();
   }
 
   setupSocket () {
@@ -70,7 +73,7 @@ export default class Chat {
       .watch()
       .on('heading', h => {
         heading = h;
-        this.socket.emit('heading', h);
+        this.socket.emit('heading', h, myHeadingNotes);
       });
 
     // setup notes
@@ -84,6 +87,7 @@ export default class Chat {
       Nexus.tune.ratio(7 - step) // A
     ]);
 
+    // possible notes to gather
     const headingNotes = [
       Nexus.tune.ratio(10 - step), // C
       Nexus.tune.ratio(12 - step), // D
@@ -93,6 +97,9 @@ export default class Chat {
       Nexus.tune.ratio(3 - step) // F
     ];
 
+    // starting off note
+    let myHeadingNotes = [headingNotes[Math.floor(Math.random() * headingNotes.length)]];
+
     StartAudioContext(Tone.context, '.remove-overlay').then(function () {
       // started
       console.log('started');
@@ -101,6 +108,9 @@ export default class Chat {
     document.getElementById('restart').addEventListener('click', () => {
       this.socket.emit('start', 'hi');
       document.getElementById('myNav').style.width = '0%';
+      document.getElementById('welcome').innerHTML = `
+        Welcome ${this.nick}
+      `;
     });
     Tone.context.latencyHint = 'playback';
 
@@ -113,6 +123,7 @@ export default class Chat {
       console.log(`Transport state: ${Tone.Transport.state}, restarted?`);
       bowedGlass.mute = false;
     });
+
     this.socket.on('stop', () => {
       Tone.Transport.stop();
 
@@ -138,7 +149,7 @@ export default class Chat {
       // set to drone for testing
       // part = 'shortSynth';
       let droneLength = patterns[patternIndex % totalUsers].values.length;
-      // console.log(`drone length: ${droneLength}`);
+
       // if the transport is running play a note each trigger
       if (Tone.Transport.state === 'started') {
         if (part === 'shortSynth') {
@@ -159,7 +170,7 @@ export default class Chat {
           drone.volume.rampTo(velocity, Nexus.rf(1, 3));
           drone.fadeIn = Tone.Time(durations).toSeconds() / 2;
           drone.fadeOut = Tone.Time(durations).toSeconds() / 3;
-          console.log(`fade in: ${drone.fadeIn}, fade out: ${drone.fadeOut}, total duration: ${durations}`);
+          // console.log(`fade in: ${drone.fadeIn}, fade out: ${drone.fadeOut}, total duration: ${durations}`);
           drone.start('@2n', offsets, durations);
         }
         Tone.Transport.bpm.value = data.bpm;
@@ -220,41 +231,72 @@ export default class Chat {
 
     let timeToResume = 0;
 
+    // checking for a match
+    // send to server
+
+    // TODO: move this to the serverside so you can check them all at once
     this.socket.on('heading', data => {
       for (let i = 0; i < data.length; i++) {
         if ((Math.abs(heading - data[i].heading) > 160 && Math.abs(heading - data[i].heading) < 200)) {
-          // console.log(`heading: ${heading}`);
-          // console.log(`i match with: ${data[i].id} at heading: ${data[i].heading}, my heading is: ${heading}`);
           if (Tone.now() > timeToResume) {
-            console.log('reached heading flag, should only happen once');
-
+            // check every 3 seconds
             timeToResume = Tone.now() + 3;
-            // TODO: which ever phone got on the network earliest sends the message
-            // look at userList and see if socket.id or data[i].id comes first
-            // which ever comes first sends the message
-            // FIXME: userList is an object
-            // let myIndex = userList.id.findIndex(x => x === data[i].id);
-            // console.log(`myindex: ${myIndex}`);
-            this.socket.emit('headingMatch', data[i].id);
+
+            // TODO: instead of sending percussion note, send the note you play when the headings match
+            // a player can collect those notes so a certain melody plays when they match someone
+            // the player can choose to take the note or not if the coin flip is in their favor
+            // figure out another system of game play later to decide who gets to take the note
+
+            this.socket.emit('headingMatch', data[i].id, myHeadingNotes, Math.floor(Math.random() * 2));
           }
 
           // match modal
           document.getElementById('match-name').innerHTML = `
-            you match with: ${data[i].nick}
-          `;
+            <p class="f2">
+              you match with: ${data[i].nick}
+            </p>`;
         }
       }
     });
 
-    this.socket.on('headingMatch', index => {
-      console.log(`playing pitch ${index}`);
-      bowedGlass.playbackRate = headingNotes[Math.floor(Math.random() * headingNotes.length)];
-      bowedGlass.start();
+    // got a match
+    // do things on client
+    this.socket.on('headingMatch', (user, matchingNotes, coin) => {
+      console.log(user, matchingNotes, coin);
+      // if coin is true client has the option of taking notes
+      // console.log(`matchingNotes: ${matchingNotes}`);
+
+      // if you are out of notes, nothing happens
+      if (myHeadingNotes.length === 0) {
+        document.getElementById('match-note').innerHTML = ` 
+        <p class="f2">
+          i'm sorry, you are out of notes. Match with another player to get a note to play. 
+        </p>`;
+      } else {
+        // FIXME: this element should sometimes not pop up, why is it always happening?
+        // always play a note, but if coin is true give ability to steal note
+        // matchingNotes = 'noTrade';
+        if (coin === 0) {
+          console.log('trade');
+          document.getElementById('match-note').innerHTML = ` 
+            <p>
+              coin is ${coin}
+            </p>
+            <p class="f2">
+              they're playing ${matchingNotes}. 
+              would you like to add one of their notes to your note bank?
+            </p>`;
+        }
+        // myHeadingNotes is currently available notes to play
+        bowedGlass.playbackRate = myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)];
+        bowedGlass.start();
+      }
 
       document.getElementById('heading-match').style.width = '100%';
     });
   }
 
+  // TODO: i think this function can actually go in a separate file
   bgAnimate (heading) {
     let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#C8C8A9', '#83AF9B', '#FE4365', '#FC9D9A', '#F9CDAD']);
     document.querySelector('body').style.background = colormap(heading);

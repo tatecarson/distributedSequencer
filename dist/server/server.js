@@ -71,13 +71,37 @@ io.on('connection', function (socket) {
     console.log('[INFO] Total users: ' + users.length);
   }
 
-  socket.on('heading', function (data) {
-    console.log(currentUser.nick);
+  var timeToResume = 0;
+
+  socket.on('heading', function (data, headingNotes) {
     currentUser.heading = data;
-    io.emit('heading', users);
+    currentUser.headingNotes = headingNotes;
+
+    for (var i = 0; i < users.length; i++) {
+      if (Math.abs(currentUser.heading - users[i].heading) > 160 && Math.abs(currentUser.heading - users[i].heading) < 200) {
+        if (process.hrtime()[0] > timeToResume) {
+          // check every 3 seconds
+          timeToResume = process.hrtime()[0] + 3;
+
+          // TODO: instead of sending percussion note, send the note you play when the headings match
+          // a player can collect those notes so a certain melody plays when they match someone
+          // the player can choose to take the note or not if the coin flip is in their favor
+          // figure out another system of game play later to decide who gets to take the note
+          console.log('match: ', currentUser.id, users[i].id, headingNotes);
+
+          // TODO: emit to these two users specifically giving the one who came first the choice of stealing
+          // io.to(currentUser.id).emit('headingMatch', headingNotes)
+          // io.to(users[i].id).emit('headingMatch', 'try again next time')
+          io.emit('headingMatch', currentUser.id, users[i].id, headingNotes);
+        }
+      }
+    }
+    // io.emit('heading', users);
   });
+
   io.emit('getTotalUsers', users.length, userList);
 
+  // orchestrate phones evenly
   for (var i = 0; i < users.length; i++) {
     console.log(users[i].id);
     if (i % 2 === 0) {
@@ -88,8 +112,15 @@ io.on('connection', function (socket) {
       io.to(users[i].id).emit('getParts', 'drone');
     }
   }
-  socket.on('headingMatch', function (user, i) {
-    io.to(user).emit('headingMatch', i);
+
+  // let matching client know what notes other client is playing
+  socket.on('headingMatch', function (user, matchingNotes, coin) {
+    // if Math.random() > 0.5 let 2nd client take first clients note
+    console.log('coin ' + coin);
+    // FIXME: this is triggering just once but sending the same message to both users
+    // I want it to send a different message to both users
+
+    io.to(user).emit('headingMatch', user, matchingNotes, coin);
   });
 
   // emit when user restarts with toggle
@@ -101,10 +132,6 @@ io.on('connection', function (socket) {
 
   socket.on('stop', function () {
     socket.broadcast.emit('stop', 'stop ittt');
-  });
-
-  socket.on('ding', function () {
-    socket.emit('dong');
   });
 
   socket.on('disconnect', function () {
