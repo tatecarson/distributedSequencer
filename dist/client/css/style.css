@@ -10,6 +10,10 @@ body {
   display: grid;
 }
 
+p {
+  color: #FC9D9A
+}
+
 .layer-1 .layer-2 {
   width: 100%;
   height: 100%;
@@ -26,7 +30,7 @@ body {
   z-index: 1;
   top: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color:#FE4365;
   overflow-x: hidden;
   transition: 0.5s;
 }

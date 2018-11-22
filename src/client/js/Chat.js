@@ -9,7 +9,7 @@ import interpolate from 'color-interpolate';
 import animation from './animation';
 
 // mobile console.log
-mobileConsole.show();
+// mobileConsole.show();
 export default class Chat {
   constructor (nick) {
     this.nick = nick;
@@ -87,10 +87,11 @@ export default class Chat {
     ]);
 
     // TODO: keep track of this on the server
+    // delete when you finish server implimentation
     // possible notes to gather
-    const headingNotes = [10, 12, 2, 8, 4, 3];
-    // starting off note
-    let myHeadingNotes = [headingNotes[Math.floor(Math.random() * headingNotes.length)]];
+    // const headingNotes = [10, 12, 2, 8, 4, 3];
+    // // starting off note
+    // let myHeadingNotes = [headingNotes[Math.floor(Math.random() * headingNotes.length)]];
 
     StartAudioContext(Tone.context, '.remove-overlay').then(function () {
       // started
@@ -106,9 +107,6 @@ export default class Chat {
     });
     Tone.context.latencyHint = 'playback';
 
-    this.socket.on('userJoin', data => {
-      console.log(JSON.stringify(data));
-    });
     // receive data from server
     //
     // start transport at the same time on all devices
@@ -226,14 +224,16 @@ export default class Chat {
 
     // got a match
     // do things on client
-    this.socket.on('headingMatch', (matchID, matchName, matchingNotes) => {
-      // console.log(user, matchingNotes, coin);
+    this.socket.on('headingMatch', (matchID, matchName, myNotes, matchingNotes, myId) => {
+      document.getElementById('heading-match').style.width = '100%';
+
+      console.log('hello: ', matchID, matchName, matchingNotes);
       document.getElementById('match-name').innerHTML = `
       <p class="f2">
         you match with: ${matchName}
       </p>`;
       // if you are out of notes, nothing happens
-      if (myHeadingNotes.length === 0) {
+      if (matchingNotes.length === 0) {
         document.getElementById('match-note').innerHTML = `
         <p class="f2">
           i'm sorry, you are out of notes. Match with another player to get a note to play.
@@ -241,8 +241,9 @@ export default class Chat {
       } else {
         if (matchingNotes) {
           // send to loser and tell them what's being stolen
-          this.socket.emit('steal', matchID);
-          let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes)).toNote();
+          this.socket.emit('steal', matchID, this.socket.id);
+          // TODO: display all notes not just one?
+          let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes[0])).toNote();
           document.getElementById('match-note').innerHTML = `
             <p class="f2">
               they're playing ${numberToNotes}.
@@ -252,23 +253,18 @@ export default class Chat {
             `;
         }
         // myHeadingNotes is currently available notes to play
-        bowedGlass.playbackRate = Nexus.tune.ratio(myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)]);
+        bowedGlass.playbackRate = Nexus.tune.ratio(myNotes[Math.floor(Math.random() * myNotes.length)]);
         bowedGlass.start();
 
-        // FIXME: this gives an array inside of an array: ex. [8, [10]]
-        // take the first note
+        // they're giving you thier note
         document.getElementById('take-note').addEventListener('click', () => {
-          // let index = matchingNotes.indexOf(Tone.Frequency(Nexus.note(matchingNotes)).toNote());
-          // console.log(`index: ${index}`);
-          // myHeadingNotes.push(matchingNotes[0]);
-          // console.log(myHeadingNotes);
+          this.socket.emit('give', matchID);
         });
       }
-
-      document.getElementById('heading-match').style.width = '100%';
     });
 
-    this.socket.on('steal', (stealer) => {
+    this.socket.on('steal', (stealer, notes) => {
+      document.getElementById('heading-match').style.width = '100%';
       document.getElementById('match-note').innerHTML = `
   
       <p class="f2">
@@ -276,9 +272,8 @@ export default class Chat {
        
       </p>`;
       // myHeadingNotes is currently available notes to play
-      bowedGlass.playbackRate = Nexus.tune.ratio(myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)]);
+      bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
       bowedGlass.start();
-      document.getElementById('heading-match').style.width = '100%';
     });
   }
 

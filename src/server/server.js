@@ -42,7 +42,7 @@ io.on('connection', (socket) => {
     id: socket.id,
     heading: heading,
     nick: nick,
-    notes: availableNotes[Math.floor(Math.random() * availableNotes.length)]
+    notes: [availableNotes[Math.floor(Math.random() * availableNotes.length)]]
   };
   let userList = [];
   if (findIndex(users, currentUser.id) > -1) {
@@ -59,14 +59,14 @@ io.on('connection', (socket) => {
     console.log('[INFO] Total users: ' + users.length);
   }
 
-  socket.on('heading', (data, matchingNotes) => {
+  socket.on('heading', (data) => {
     currentUser.heading = data;
     // currentUser.matchingNotes = matchingNotes;
 
     for (let i = 0; i < users.length; i++) {
       if ((Math.abs(currentUser.heading - users[i].heading) === 180)) {
-        console.log('match: ', currentUser.id, users[i].id, currentUser.notes, users[i].notes);
-        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, users[i].matchingNotes);
+        console.log('match: ', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes);
+        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes, users[i].id);
       }
     }
   });
@@ -74,13 +74,20 @@ io.on('connection', (socket) => {
   // take note from user
   // TODO: add which note to take? and slice it from the array on the server
   socket.on('steal', (victim, stealer) => {
-    io.to(victim).emit('steal', currentUser.nick);
+    console.log(users, stealer);
+
+    io.to(victim).emit('steal', currentUser.nick, currentUser.notes);
   });
 
   // give note to user
   // TODO: add which note to give and add it to the array on the server
-  socket.on('give', (giver, taker) => {
-    io.to(giver).emit('give');
+  socket.on('give', (taker) => {
+    users.forEach(x => {
+      if (x.id === taker) {
+        x.notes.push(currentUser.notes[0]);
+        console.log(currentUser.id, x.id, x.notes);
+      }
+    });
   });
 
   io.emit('getTotalUsers', users.length, userList);

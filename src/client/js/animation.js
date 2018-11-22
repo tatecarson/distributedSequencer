@@ -1,20 +1,22 @@
-function animation () {
-  var canvas = document.querySelector('canvas'),
-    cx = canvas.getContext('2d');
+// based on ...
 
-  var INCREMENT = 12345,
-    MULTIPLIER = 1103515245,
-    MODULUS = Math.pow(2, 31);
+function animation () {
+  var canvas = document.querySelector('canvas');
+  var cx = canvas.getContext('2d');
+
+  var INCREMENT = 12345;
+  var MULTIPLIER = 1103515245;
+  var MODULUS = Math.pow(2, 31);
 
   // Todo esto son inputs del nodo generador
-  var stepX = 16,
-    stepY = 16,
-    sizeX = 1,
-    sizeY = 1,
-    marginTop = 32,
-    marginBottom = 32,
-    marginLeft = 32,
-    marginRight = 32;
+  var stepX = 8;
+  var stepY = 8;
+  var sizeX = 2;
+  var sizeY = 2;
+  var marginTop = 32;
+  var marginBottom = 32;
+  var marginLeft = 32;
+  var marginRight = 32;
 
   var frameID = void 0;
 
@@ -43,15 +45,18 @@ function animation () {
 
   function frame (frameTime) {
   // First element
-    cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
+
+    if (frameTime % 25 === 0) {
+      cx.clearRect(0, 0, cx.canvas.width, cx.canvas.height);
+    }
     for (var y = marginTop; y < cx.canvas.height - marginBottom; y += stepY) {
       random.reset(y);
       for (var x = marginLeft; x < cx.canvas.width - marginRight; x += stepX) {
         var randomValue = random.get();
-        var distX = randomValue * 16;
-        var distY = randomValue * 16;
+        var distX = randomValue * 6;
+        var distY = randomValue * 4;
         var phase = randomValue * Math.PI * 2;
-        cx.fillStyle = '#000';
+        cx.fillStyle = '#FC9D9A';
         cx.fillRect(
           x,
           y,
