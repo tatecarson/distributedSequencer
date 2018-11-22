@@ -73,30 +73,22 @@ export default class Chat {
       .watch()
       .on('heading', h => {
         heading = h;
-        this.socket.emit('heading', h, myHeadingNotes);
+        this.socket.emit('heading', h);
       });
 
     // setup notes
-    const step = 1;
     let percussionNote = Nexus.note(0);
     const droneNotes = new Nexus.Sequence([
-      Nexus.tune.ratio(9 - step), // B
-      Nexus.tune.ratio(11 - step), // Db
-      Nexus.tune.ratio(1 - step), // Eb
-      Nexus.tune.ratio(6 - step), // Ab
-      Nexus.tune.ratio(7 - step) // A
+      Nexus.tune.ratio(9), // B
+      Nexus.tune.ratio(11), // Db
+      Nexus.tune.ratio(1), // Eb
+      Nexus.tune.ratio(6), // Ab
+      Nexus.tune.ratio(7) // A
     ]);
 
+    // TODO: keep track of this on the server
     // possible notes to gather
-    const headingNotes = [
-      Nexus.tune.ratio(10 - step), // C
-      Nexus.tune.ratio(12 - step), // D
-      Nexus.tune.ratio(2 - step), // E
-      Nexus.tune.ratio(8 - step), // Bb
-      Nexus.tune.ratio(4 - step), // Gb
-      Nexus.tune.ratio(3 - step) // F
-    ];
-
+    const headingNotes = [10, 12, 2, 8, 4, 3];
     // starting off note
     let myHeadingNotes = [headingNotes[Math.floor(Math.random() * headingNotes.length)]];
 
@@ -114,6 +106,9 @@ export default class Chat {
     });
     Tone.context.latencyHint = 'playback';
 
+    this.socket.on('userJoin', data => {
+      console.log(JSON.stringify(data));
+    });
     // receive data from server
     //
     // start transport at the same time on all devices
@@ -247,16 +242,27 @@ export default class Chat {
         if (matchingNotes) {
           // send to loser and tell them what's being stolen
           this.socket.emit('steal', matchID);
+          let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes)).toNote();
           document.getElementById('match-note').innerHTML = `
-
             <p class="f2">
-              they're playing ${matchingNotes}.
+              they're playing ${numberToNotes}.
               would you like to add one of their notes to your note bank?
-            </p>`;
+            </p>
+            <button type="button" id="take-note">Take Note</button>
+            `;
         }
         // myHeadingNotes is currently available notes to play
-        bowedGlass.playbackRate = myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)];
+        bowedGlass.playbackRate = Nexus.tune.ratio(myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)]);
         bowedGlass.start();
+
+        // FIXME: this gives an array inside of an array: ex. [8, [10]]
+        // take the first note
+        document.getElementById('take-note').addEventListener('click', () => {
+          // let index = matchingNotes.indexOf(Tone.Frequency(Nexus.note(matchingNotes)).toNote());
+          // console.log(`index: ${index}`);
+          // myHeadingNotes.push(matchingNotes[0]);
+          // console.log(myHeadingNotes);
+        });
       }
 
       document.getElementById('heading-match').style.width = '100%';
@@ -266,14 +272,16 @@ export default class Chat {
       document.getElementById('match-note').innerHTML = `
   
       <p class="f2">
-        ${stealer} is stealing your note.
+        You just shared your note with ${stealer}.
        
       </p>`;
+      // myHeadingNotes is currently available notes to play
+      bowedGlass.playbackRate = Nexus.tune.ratio(myHeadingNotes[Math.floor(Math.random() * myHeadingNotes.length)]);
+      bowedGlass.start();
       document.getElementById('heading-match').style.width = '100%';
     });
   }
 
-  // TODO: i think this function can actually go in a separate file
   bgAnimate (heading) {
     let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#C8C8A9', '#83AF9B', '#FE4365', '#FC9D9A', '#F9CDAD']);
     document.querySelector('body').style.background = colormap(heading);

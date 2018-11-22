@@ -26,7 +26,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 // const debounce = require('lodash.debounce');
 // const throttle = require('lodash.throttle');
-var _ = require('lodash');
+// const _ = require('lodash');
 
 var app = (0, _express2.default)();
 var server = _http2.default.Server(app);
@@ -55,10 +55,12 @@ app.use(_express2.default['static'](__dirname + '/../client'));
 io.on('connection', function (socket) {
   var nick = socket.handshake.query.nick;
   var heading = void 0;
+  var availableNotes = [10, 12, 2, 8, 4, 3];
   var currentUser = {
     id: socket.id,
     heading: heading,
-    nick: nick
+    nick: nick,
+    notes: availableNotes[Math.floor(Math.random() * availableNotes.length)]
   };
   var userList = [];
   if ((0, _util.findIndex)(users, currentUser.id) > -1) {
@@ -71,31 +73,34 @@ io.on('connection', function (socket) {
     sockets[currentUser.id] = socket;
     users.push(currentUser);
     userList.push(currentUser.id);
-    io.emit('userJoin', { nick: currentUser.nick, total: users.length });
+    io.emit('userJoin', { nick: currentUser.nick, total: users.length, note: currentUser.notes });
     console.log('[INFO] Total users: ' + users.length);
   }
 
-  socket.on('heading', function (data, headingNotes) {
+  socket.on('heading', function (data, matchingNotes) {
     currentUser.heading = data;
-    currentUser.headingNotes = headingNotes;
+    // currentUser.matchingNotes = matchingNotes;
 
     for (var i = 0; i < users.length; i++) {
       if (Math.abs(currentUser.heading - users[i].heading) === 180) {
-        // TODO: instead of sending percussion note, send the note you play when the headings match
-        // a player can collect those notes so a certain melody plays when they match someone
-        // the player can choose to take the note or not if the coin flip is in their favor
-        // figure out another system of game play later to decide who gets to take the note
-
-        console.log('match: ', currentUser.id, users[i].id, headingNotes);
-        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, headingNotes);
+        console.log('match: ', currentUser.id, users[i].id, currentUser.notes, users[i].notes);
+        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, users[i].matchingNotes);
       }
     }
-    // io.emit('heading', users);
   });
 
+  // take note from user
+  // TODO: add which note to take? and slice it from the array on the server
   socket.on('steal', function (victim, stealer) {
     io.to(victim).emit('steal', currentUser.nick);
   });
+
+  // give note to user
+  // TODO: add which note to give and add it to the array on the server
+  socket.on('give', function (giver, taker) {
+    io.to(giver).emit('give');
+  });
+
   io.emit('getTotalUsers', users.length, userList);
 
   // orchestrate phones evenly
@@ -109,16 +114,6 @@ io.on('connection', function (socket) {
       io.to(users[i].id).emit('getParts', 'drone');
     }
   }
-
-  // // let matching client know what notes other client is playing
-  // socket.on('headingMatch', (user, matchingNotes, coin) => {
-  //   // if Math.random() > 0.5 let 2nd client take first clients note
-  //   console.log(`coin ${coin}`);
-  //   // FIXME: this is triggering just once but sending the same message to both users
-  //   // I want it to send a different message to both users
-
-  //   io.to(user).emit('headingMatch', user, matchingNotes, coin);
-  // });
 
   // emit when user restarts with toggle
   // or clicks 'tap to start composing'
