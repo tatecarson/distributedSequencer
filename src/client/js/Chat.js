@@ -224,10 +224,9 @@ export default class Chat {
 
     // got a match
     // do things on client
-    this.socket.on('headingMatch', (matchID, matchName, myNotes, matchingNotes, myId) => {
+    this.socket.on('headingMatch', (matchID, matchName, matchingNotes, myNotes, myId) => {
       document.getElementById('heading-match').style.width = '100%';
 
-      console.log('hello: ', matchID, matchName, matchingNotes);
       document.getElementById('match-name').innerHTML = `
       <p class="f2">
         you match with: ${matchName}
@@ -252,7 +251,7 @@ export default class Chat {
 
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
-        this.socket.emit('give', matchID);
+        this.socket.emit('give', matchID, myId);
       });
     });
 

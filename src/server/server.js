@@ -66,7 +66,7 @@ io.on('connection', (socket) => {
     for (let i = 0; i < users.length; i++) {
       if ((Math.abs(currentUser.heading - users[i].heading) === 180)) {
         console.log('match: ', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes);
-        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes, users[i].id);
+        io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, currentUser.notes, users[i].notes, users[i].id);
 
         // trying this
         io.to(currentUser.id).emit('steal', users[i].nick, currentUser.notes);
@@ -76,19 +76,19 @@ io.on('connection', (socket) => {
 
   // take note from user
   // TODO: add which note to take? and slice it from the array on the server
-  socket.on('steal', (victim, stealer) => {
-    console.log(users, stealer);
+  // socket.on('steal', (victim, stealer) => {
+  //   console.log(users, stealer);
 
-    io.to(victim).emit('steal', currentUser.nick, currentUser.notes);
-  });
+  //   io.to(victim).emit('steal', currentUser.nick, currentUser.notes);
+  // });
 
   // give note to user
   // TODO: add which note to give and add it to the array on the server
-  socket.on('give', (taker) => {
+  socket.on('give', (takerId, giverId) => {
     users.forEach(x => {
-      if (x.id === taker) {
+      if (x.id === takerId) {
         x.notes.push(currentUser.notes[0]);
-        console.log(currentUser.id, x.id, x.notes);
+        console.log(currentUser.id, giverId, x.id, x.notes);
       }
     });
   });
