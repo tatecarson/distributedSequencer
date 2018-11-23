@@ -67,6 +67,9 @@ io.on('connection', (socket) => {
       if ((Math.abs(currentUser.heading - users[i].heading) === 180)) {
         console.log('match: ', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes);
         io.to(users[i].id).emit('headingMatch', currentUser.id, currentUser.nick, users[i].notes, currentUser.notes, users[i].id);
+
+        // trying this
+        io.to(currentUser.id).emit('steal', users[i].nick, currentUser.notes);
       }
     }
   });

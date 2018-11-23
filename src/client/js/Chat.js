@@ -232,35 +232,28 @@ export default class Chat {
       <p class="f2">
         you match with: ${matchName}
       </p>`;
-      // if you are out of notes, nothing happens
-      if (matchingNotes.length === 0) {
-        document.getElementById('match-note').innerHTML = `
-        <p class="f2">
-          i'm sorry, you are out of notes. Match with another player to get a note to play.
-        </p>`;
-      } else {
-        if (matchingNotes) {
-          // send to loser and tell them what's being stolen
-          this.socket.emit('steal', matchID, this.socket.id);
-          // TODO: display all notes not just one?
-          let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes[0])).toNote();
-          document.getElementById('match-note').innerHTML = `
+
+      // TODO: display all notes not just one?
+      let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes[0])).toNote();
+      document.getElementById('match-note').innerHTML = `
             <p class="f2">
               they're playing ${numberToNotes}.
               would you like to add one of their notes to your note bank?
             </p>
             <button type="button" id="take-note">Take Note</button>
+            <p>
+              you currently have these notes: ${myNotes}
+            </p>
             `;
-        }
-        // myHeadingNotes is currently available notes to play
-        bowedGlass.playbackRate = Nexus.tune.ratio(myNotes[Math.floor(Math.random() * myNotes.length)]);
-        bowedGlass.start();
 
-        // they're giving you thier note
-        document.getElementById('take-note').addEventListener('click', () => {
-          this.socket.emit('give', matchID);
-        });
-      }
+      // myHeadingNotes is currently available notes to play
+      bowedGlass.playbackRate = Nexus.tune.ratio(myNotes[Math.floor(Math.random() * myNotes.length)]);
+      bowedGlass.start();
+
+      // they're giving you their note
+      document.getElementById('take-note').addEventListener('click', () => {
+        this.socket.emit('give', matchID);
+      });
     });
 
     this.socket.on('steal', (stealer, notes) => {
@@ -269,7 +262,7 @@ export default class Chat {
   
       <p class="f2">
         You just shared your note with ${stealer}.
-       
+        You still have these notes: ${notes}.
       </p>`;
       // myHeadingNotes is currently available notes to play
       bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
@@ -278,7 +271,7 @@ export default class Chat {
   }
 
   bgAnimate (heading) {
-    let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#C8C8A9', '#83AF9B', '#FE4365', '#FC9D9A', '#F9CDAD']);
+    let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#C8C8A9', '#83AF9B', '#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
     document.querySelector('body').style.background = colormap(heading);
     const position = document.querySelector('#d');
 
