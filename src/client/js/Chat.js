@@ -12,11 +12,23 @@ import animation from './animation';
 // mobileConsole.show();
 export default class Chat {
   constructor (nick) {
+    console.log(nick);
     this.nick = nick;
+    // FIXME: nick has to be only one word.
     this.socket = io({ query: 'nick=' + nick });
 
     this.setupSocket();
     this.setupSynth();
+
+    // if given name send start immediately
+
+    this.socket.emit('start', 'hi');
+
+    // then remove loading screen
+    document.getElementById('myNav').style.width = '0%';
+    document.getElementById('welcome').innerHTML = `
+        Welcome ${this.nick}
+      `;
 
     animation();
   }
@@ -86,25 +98,11 @@ export default class Chat {
       Nexus.tune.ratio(7) // A
     ]);
 
-    // TODO: keep track of this on the server
-    // delete when you finish server implimentation
-    // possible notes to gather
-    // const headingNotes = [10, 12, 2, 8, 4, 3];
-    // // starting off note
-    // let myHeadingNotes = [headingNotes[Math.floor(Math.random() * headingNotes.length)]];
-
-    StartAudioContext(Tone.context, '.remove-overlay').then(function () {
+    StartAudioContext(Tone.context, '.start-audio').then(function () {
       // started
       console.log('started');
     });
 
-    document.getElementById('restart').addEventListener('click', () => {
-      this.socket.emit('start', 'hi');
-      document.getElementById('myNav').style.width = '0%';
-      document.getElementById('welcome').innerHTML = `
-        Welcome ${this.nick}
-      `;
-    });
     Tone.context.latencyHint = 'playback';
 
     // receive data from server
@@ -269,27 +267,34 @@ export default class Chat {
     });
   }
 
-  bgAnimate (heading) {
-    let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#C8C8A9', '#83AF9B', '#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
-    document.querySelector('body').style.background = colormap(heading);
+  bgAnimate (h) {
+    let heading = h.toFixed(3);
+    let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
+    // let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
     const position = document.querySelector('#d');
-
-    if (heading > 0.0 && heading < 0.25) {
+    const hitColor = '#C8C8A9';
+    document.querySelector('body').style.background = colormap(heading);
+    if (heading > 0.000 && heading < 0.009) {
       position.innerHTML = `<p>
-        Position 1
+      Position 1
       </p>`;
-    } else if (heading > 0.25 && heading < 0.5) {
+      document.querySelector('body').style.background = hitColor;
+      console.log('here');
+    } else if (heading > 0.250 && heading < 0.260) {
       position.innerHTML = `<p>
       Position 2
-    </p>`;
-    } else if (heading > 0.5 && heading < 0.75) {
+      </p>`;
+      document.querySelector('body').style.background = hitColor;
+    } else if (heading > 0.500 && heading < 0.510) {
       position.innerHTML = `<p>
       Position 3
-    </p>`;
-    } else if (heading > 0.75 && heading < 1) {
+      </p>`;
+      document.querySelector('body').style.background = hitColor;
+    } else if (heading > 0.750 && heading < 0.760) {
       position.innerHTML = `<p>
       Position 4
-    </p>`;
+      </p>`;
+      document.querySelector('body').style.background = hitColor;
     }
   }
 }

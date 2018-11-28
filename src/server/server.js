@@ -6,9 +6,6 @@ import SocketIO from 'socket.io';
 import compression from 'compression';
 import {validNick, findIndex, sanitizeString} from '../shared/util';
 import abletonlink from 'abletonlink';
-// const debounce = require('lodash.debounce');
-// const throttle = require('lodash.throttle');
-// const _ = require('lodash');
 
 const app = express();
 const server = http.Server(app);
