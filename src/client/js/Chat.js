@@ -7,14 +7,15 @@ import StartAudioContext from 'startaudiocontext';
 import mobileConsole from 'js-mobile-console';
 import interpolate from 'color-interpolate';
 import animation from './animation';
+import { numberToNotes } from './soundUtil';
 
 // mobile console.log
-// mobileConsole.show();
+mobileConsole.show();
 export default class Chat {
   constructor (nick) {
     console.log(nick);
     this.nick = nick;
-    // FIXME: nick has to be only one word.
+
     this.socket = io({ query: 'nick=' + nick });
 
     this.setupSocket();
@@ -230,26 +231,42 @@ export default class Chat {
         you match with: ${matchName}
       </p>`;
 
-      // TODO: display all notes not just one?
-      let numberToNotes = Tone.Frequency(Nexus.note(matchingNotes[0])).toNote();
+      const notesEl = document.getElementById('select-notes');
+      console.log(`notes: ${numberToNotes(matchingNotes)}`);
+
+      // first clear list
+      while (notesEl.hasChildNodes()) {
+        notesEl.removeChild(notesEl.firstChild);
+      }
+
+      // add notes to dropdown
+      // FIXME: this should not come up when you're getting a note stolen
+      numberToNotes(matchingNotes).forEach(note => {
+        console.log(`going in select: ${note}`);
+        const option = document.createElement('option');
+        option.text = note;
+        notesEl.add(option);
+      });
       document.getElementById('match-note').innerHTML = `
             <p class="f2">
-              they're playing ${numberToNotes}.
+              their note list: ${numberToNotes(matchingNotes)}
               would you like to add one of their notes to your note bank?
             </p>
             <button type="button" id="take-note">Take Note</button>
             <p>
-              you currently have these notes: ${myNotes}
+              you currently have these notes: ${numberToNotes(myNotes)}
             </p>
             `;
 
       // myHeadingNotes is currently available notes to play
+      console.log(`notes on the client: ${myNotes}`);
       bowedGlass.playbackRate = Nexus.tune.ratio(myNotes[Math.floor(Math.random() * myNotes.length)]);
       bowedGlass.start();
 
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
-        this.socket.emit('give', matchID, myId);
+        this.socket.emit('give', matchID, notesEl.selectedIndex);
+        document.getElementById('take-note').disabled = true; // only allow one button press
       });
     });
 
@@ -259,7 +276,7 @@ export default class Chat {
   
       <p class="f2">
         You just shared your note with ${stealer}.
-        You still have these notes: ${notes}.
+        You still have these notes: ${numberToNotes(notes)}.
       </p>`;
       // myHeadingNotes is currently available notes to play
       bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
@@ -279,7 +296,6 @@ export default class Chat {
       Position 1
       </p>`;
       document.querySelector('body').style.background = hitColor;
-      console.log('here');
     } else if (heading > 0.250 && heading < 0.260) {
       position.innerHTML = `<p>
       Position 2

@@ -88,21 +88,15 @@ io.on('connection', function (socket) {
     }
   });
 
-  // take note from user
-  // TODO: add which note to take? and slice it from the array on the server
-  // socket.on('steal', (victim, stealer) => {
-  //   console.log(users, stealer);
-
-  //   io.to(victim).emit('steal', currentUser.nick, currentUser.notes);
-  // });
-
   // give note to user
-  // TODO: add which note to give and add it to the array on the server
-  socket.on('give', function (takerId, giverId) {
-    users.forEach(function (x) {
-      if (x.id === takerId) {
-        x.notes.push(currentUser.notes[0]);
-        console.log(currentUser.id, giverId, x.id, x.notes);
+  socket.on('give', function (giverId, pickedNote) {
+    // look at ever user
+    console.log(pickedNote);
+    users.forEach(function (giver) {
+      // find the user that matches the giver id
+      if (giver.id === giverId) {
+        // give the other users notes to current user
+        currentUser.notes.push(giver.notes[pickedNote]);
       }
     });
   });
@@ -137,16 +131,6 @@ io.on('connection', function (socket) {
     console.log('[INFO] User ' + currentUser.nick + ' disconnected!');
     socket.broadcast.emit('userDisconnect', { nick: currentUser.nick });
     io.emit('getTotalUsers', users.length);
-  });
-
-  socket.on('userChat', function (data) {
-    var _nick = (0, _util.sanitizeString)(data.nick);
-    var _message = (0, _util.sanitizeString)(data.message);
-    var date = new Date();
-    var time = ('0' + date.getHours()).slice(-2) + ('0' + date.getMinutes()).slice(-2);
-
-    console.log('[CHAT] [' + time + '] ' + _nick + ': ' + _message);
-    socket.broadcast.emit('serverSendUserChat', { nick: _nick, message: _message });
   });
 });
 
