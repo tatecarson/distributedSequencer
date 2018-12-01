@@ -179,7 +179,6 @@ export default class Chat {
       } else {
         Tone.Transport.stop();
         Tone.Master.mute = true;
-        // this.socket.emit('stop', 'please stop');
       }
     });
 
@@ -225,32 +224,26 @@ export default class Chat {
       document.getElementById('match-name').innerHTML = `
       <p class="f2">
         you match with: ${matchName}
-      </p>`;
+      </p>
+      `;
+      document.getElementById('match-note').innerHTML = `
+        <p class="f2">
+        their note list: ${numberToNotes(matchingNotes)}
+        would you like to add one of their notes to your note bank?
+        </p>
+        <select id="select-notes"></select>
+        <button type="button" id="take-note">Take Note</button>
+        <p>
+        you currently have these notes: ${numberToNotes(myNotes)}
+        </p>
+      `;
 
-      const notesEl = document.getElementById('select-notes');
-
-      // first clear list
-      while (notesEl.hasChildNodes()) {
-        notesEl.removeChild(notesEl.firstChild);
-      }
-
-      // add notes to dropdown
-      // FIXME: this should not come up when you're getting a note stolen
+      const selectedNote = document.getElementById('select-notes');
       numberToNotes(matchingNotes).forEach(note => {
         const option = document.createElement('option');
         option.text = note;
-        notesEl.add(option);
+        selectedNote.add(option);
       });
-      document.getElementById('match-note').innerHTML = `
-            <p class="f2">
-              their note list: ${numberToNotes(matchingNotes)}
-              would you like to add one of their notes to your note bank?
-            </p>
-            <button type="button" id="take-note">Take Note</button>
-            <p>
-              you currently have these notes: ${numberToNotes(myNotes)}
-            </p>
-            `;
 
       const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.'], 'randomWalk');
       const bowedNotePattern = new Tone.CtrlPattern(myNotes, 'randomWalk');
@@ -259,17 +252,13 @@ export default class Chat {
       // FIXME: still not really working correctly, not playing all notes in array
       var pattern = new Tone.Part((time, value) => {
         // play if pattern is a 1
-        // console.log(`on or off: ${bowedRhythmPattern.next()}`);
-        console.log(`note: ${value.note}, dur: ${value.dur}, time: ${value.time}`);
         bowedGlass.playbackRate = Nexus.tune.ratio(value.note);
         bowedGlass.start();
       }, part).stop().start();
 
-      // pattern.iterations = 10;
-      // pattern.interval = '16n';
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
-        this.socket.emit('give', matchID, notesEl.selectedIndex);
+        this.socket.emit('give', matchID, selectedNote.selectedIndex);
         document.getElementById('take-note').disabled = true; // only allow one button press
       });
     });
