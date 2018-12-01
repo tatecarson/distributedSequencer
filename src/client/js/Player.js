@@ -7,13 +7,13 @@ import Pattern from 'Tone/event/Pattern';
 import kompas from 'kompas';
 import StartAudioContext from 'startaudiocontext';
 import mobileConsole from 'js-mobile-console';
-// import interpolate from 'color-interpolate';
 import { animation, bgAnimate } from './animation';
 import { numberToNotes, merge } from './soundUtil';
+import { headingMatch, selectNotes } from './views';
 
 // mobile console.log
 mobileConsole.show();
-export default class Chat {
+export default class Player {
   constructor (nick) {
     this.nick = nick;
 
@@ -219,31 +219,7 @@ export default class Chat {
     // got a match
     // do things on client
     this.socket.on('headingMatch', (matchID, matchName, matchingNotes, myNotes, myId) => {
-      document.getElementById('heading-match').style.width = '100%';
-
-      document.getElementById('match-name').innerHTML = `
-      <p class="f2">
-        you match with: ${matchName}
-      </p>
-      `;
-      document.getElementById('match-note').innerHTML = `
-        <p class="f2">
-        their note list: ${numberToNotes(matchingNotes)}
-        would you like to add one of their notes to your note bank?
-        </p>
-        <select id="select-notes"></select>
-        <button type="button" id="take-note">Take Note</button>
-        <p>
-        you currently have these notes: ${numberToNotes(myNotes)}
-        </p>
-      `;
-
-      const selectedNote = document.getElementById('select-notes');
-      numberToNotes(matchingNotes).forEach(note => {
-        const option = document.createElement('option');
-        option.text = note;
-        selectedNote.add(option);
-      });
+      headingMatch(matchName, matchingNotes, myNotes);
 
       const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.'], 'randomWalk');
       const bowedNotePattern = new Tone.CtrlPattern(myNotes, 'randomWalk');
@@ -258,7 +234,7 @@ export default class Chat {
 
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
-        this.socket.emit('give', matchID, selectedNote.selectedIndex);
+        this.socket.emit('give', matchID, selectNotes().selectedIndex);
         document.getElementById('take-note').disabled = true; // only allow one button press
       });
     });

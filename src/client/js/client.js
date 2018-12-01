@@ -1,19 +1,19 @@
 'use strict';
 
-import Chat from './Chat';
+import Player from './Player';
 import { noSpaces, getFunName } from '../../shared/util';
 class Client {
   constructor () {
     let userNameInput = document.getElementById('userNameInput');
     document.getElementById('submit-user').addEventListener('click', () => {
       // noSpaces removes everything after a space because it breaks socket query
-      this.startChat(noSpaces(userNameInput.value) || getFunName());
+      this.startPlayer(noSpaces(userNameInput.value) || getFunName());
     });
   }
 
-  startChat (nick) {
+  startPlayer (nick) {
     this.nick = nick;
-    this.chat = new Chat(this.nick);
+    this.player = new Player(this.nick);
   }
 }
 
