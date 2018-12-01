@@ -1,6 +1,6 @@
-// based on ...
+import interpolate from 'color-interpolate';
 
-function animation () {
+export function animation () {
   var canvas = document.querySelector('canvas');
   var cx = canvas.getContext('2d');
 
@@ -82,4 +82,32 @@ function animation () {
   start();
 }
 
-export default animation;
+export function bgAnimate (h) {
+  let heading = h.toFixed(3);
+  let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
+  // let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
+  const position = document.querySelector('#d');
+  const hitColor = '#C8C8A9';
+  document.querySelector('body').style.background = colormap(heading);
+  if (heading > 0.000 && heading < 0.009) {
+    position.innerHTML = `<p>
+    Position 1
+    </p>`;
+    document.querySelector('body').style.background = hitColor;
+  } else if (heading > 0.250 && heading < 0.260) {
+    position.innerHTML = `<p>
+    Position 2
+    </p>`;
+    document.querySelector('body').style.background = hitColor;
+  } else if (heading > 0.500 && heading < 0.510) {
+    position.innerHTML = `<p>
+    Position 3
+    </p>`;
+    document.querySelector('body').style.background = hitColor;
+  } else if (heading > 0.750 && heading < 0.760) {
+    position.innerHTML = `<p>
+    Position 4
+    </p>`;
+    document.querySelector('body').style.background = hitColor;
+  }
+}

@@ -7,8 +7,8 @@ import Pattern from 'Tone/event/Pattern';
 import kompas from 'kompas';
 import StartAudioContext from 'startaudiocontext';
 import mobileConsole from 'js-mobile-console';
-import interpolate from 'color-interpolate';
-import animation from './animation';
+// import interpolate from 'color-interpolate';
+import { animation, bgAnimate } from './animation';
 import { numberToNotes, merge } from './soundUtil';
 
 // mobile console.log
@@ -213,7 +213,7 @@ export default class Chat {
         droneNotes.mode = 'random';
         drone = laDrone2;
       }
-      this.bgAnimate(v.z);
+      bgAnimate(v.z);
     });
 
     // got a match
@@ -275,35 +275,5 @@ export default class Chat {
       // bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
       // bowedGlass.start();
     });
-  }
-
-  bgAnimate (h) {
-    let heading = h.toFixed(3);
-    let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
-    // let colormap = interpolate(['#FE4365', '#FC9D9A', '#F9CDAD', '#FE4365']);
-    const position = document.querySelector('#d');
-    const hitColor = '#C8C8A9';
-    document.querySelector('body').style.background = colormap(heading);
-    if (heading > 0.000 && heading < 0.009) {
-      position.innerHTML = `<p>
-      Position 1
-      </p>`;
-      document.querySelector('body').style.background = hitColor;
-    } else if (heading > 0.250 && heading < 0.260) {
-      position.innerHTML = `<p>
-      Position 2
-      </p>`;
-      document.querySelector('body').style.background = hitColor;
-    } else if (heading > 0.500 && heading < 0.510) {
-      position.innerHTML = `<p>
-      Position 3
-      </p>`;
-      document.querySelector('body').style.background = hitColor;
-    } else if (heading > 0.750 && heading < 0.760) {
-      position.innerHTML = `<p>
-      Position 4
-      </p>`;
-      document.querySelector('body').style.background = hitColor;
-    }
   }
 }
