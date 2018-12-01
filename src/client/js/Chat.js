@@ -2,18 +2,19 @@ import io from 'socket.io-client';
 import Nexus from 'nexusui';
 import MakeSynth from './MakeSynth';
 import Tone from 'Tone/core/Tone';
+import Part from 'Tone/event/Part';
+import Pattern from 'Tone/event/Pattern';
 import kompas from 'kompas';
 import StartAudioContext from 'startaudiocontext';
 import mobileConsole from 'js-mobile-console';
 import interpolate from 'color-interpolate';
 import animation from './animation';
-import { numberToNotes } from './soundUtil';
+import { numberToNotes, merge } from './soundUtil';
 
 // mobile console.log
 mobileConsole.show();
 export default class Chat {
   constructor (nick) {
-    console.log(nick);
     this.nick = nick;
 
     this.socket = io({ query: 'nick=' + nick });
@@ -112,7 +113,6 @@ export default class Chat {
     // stop first if already running
     this.socket.on('start', () => {
       Tone.Transport.stop().start();
-      console.log(`Transport state: ${Tone.Transport.state}, restarted?`);
       bowedGlass.mute = false;
     });
 
@@ -124,8 +124,6 @@ export default class Chat {
 
     this.socket.on('getParts', data => {
       part = data;
-
-      console.log(part);
     });
 
     this.socket.on('getTotalUsers', (total, users) => {
@@ -137,6 +135,7 @@ export default class Chat {
       console.log(`total users: ${totalUsers}, user list: ${userList}`);
     });
 
+    // /* mute this for now
     this.socket.on('beat', function (data) {
       // set to drone for testing
       // part = 'shortSynth';
@@ -168,6 +167,7 @@ export default class Chat {
         Tone.Transport.bpm.value = data.bpm;
       }
     });
+    // */
 
     // Nexus UI elements - do stuff that affects your sound and sends data to other clients
     muteToggle.on('change', v => {
@@ -187,7 +187,6 @@ export default class Chat {
     tilt.on('change', v => {
       if (v.z > 0.0 && v.z < 0.25) {
         // fm
-        // console.log('position 1');
         percussionNote = Nexus.tune.ratio(7);
         patternIndex = 0;
 
@@ -195,14 +194,12 @@ export default class Chat {
         drone = laDrone;
       } else if (v.z > 0.25 && v.z < 0.5) {
         // fm
-        // console.log('position 2');
         patternIndex = 1;
         percussionNote = Nexus.tune.ratio(0);
 
         droneNotes.mode = 'down';
         drone = laDrone;
       } else if (v.z > 0.5 && v.z < 0.75) {
-        // console.log('position 3');
         // fm
         patternIndex = 2;
         percussionNote = Nexus.tune.ratio(3);
@@ -210,7 +207,6 @@ export default class Chat {
         droneNotes.mode = 'drunk';
         drone = laDrone2;
       } else if (v.z > 0.75 && v.z < 1) {
-        // console.log('position 4');
         // fm
         patternIndex = 3;
         percussionNote = Nexus.tune.ratio(5);
@@ -232,7 +228,6 @@ export default class Chat {
       </p>`;
 
       const notesEl = document.getElementById('select-notes');
-      console.log(`notes: ${numberToNotes(matchingNotes)}`);
 
       // first clear list
       while (notesEl.hasChildNodes()) {
@@ -242,7 +237,6 @@ export default class Chat {
       // add notes to dropdown
       // FIXME: this should not come up when you're getting a note stolen
       numberToNotes(matchingNotes).forEach(note => {
-        console.log(`going in select: ${note}`);
         const option = document.createElement('option');
         option.text = note;
         notesEl.add(option);
@@ -258,11 +252,21 @@ export default class Chat {
             </p>
             `;
 
-      // myHeadingNotes is currently available notes to play
-      console.log(`notes on the client: ${myNotes}`);
-      bowedGlass.playbackRate = Nexus.tune.ratio(myNotes[Math.floor(Math.random() * myNotes.length)]);
-      bowedGlass.start();
+      const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.'], 'randomWalk');
+      const bowedNotePattern = new Tone.CtrlPattern(myNotes, 'randomWalk');
+      const part = merge(bowedRhythmPattern.values, bowedNotePattern.values);
+      console.log(`the part: ${JSON.stringify(part)}`);
+      // FIXME: still not really working correctly, not playing all notes in array
+      var pattern = new Tone.Part((time, value) => {
+        // play if pattern is a 1
+        // console.log(`on or off: ${bowedRhythmPattern.next()}`);
+        console.log(`note: ${value.note}, dur: ${value.dur}, time: ${value.time}`);
+        bowedGlass.playbackRate = Nexus.tune.ratio(value.note);
+        bowedGlass.start();
+      }, part).stop().start();
 
+      // pattern.iterations = 10;
+      // pattern.interval = '16n';
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
         this.socket.emit('give', matchID, notesEl.selectedIndex);
@@ -278,9 +282,9 @@ export default class Chat {
         You just shared your note with ${stealer}.
         You still have these notes: ${numberToNotes(notes)}.
       </p>`;
-      // myHeadingNotes is currently available notes to play
-      bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
-      bowedGlass.start();
+
+      // bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
+      // bowedGlass.start();
     });
   }
 
