@@ -135,7 +135,7 @@ export default class Player {
       console.log(`total users: ${totalUsers}, user list: ${userList}`);
     });
 
-    // /* mute this for now
+    /* mute this for now
     this.socket.on('beat', function (data) {
       // set to drone for testing
       // part = 'shortSynth';
@@ -221,16 +221,17 @@ export default class Player {
     this.socket.on('headingMatch', (matchID, matchName, matchingNotes, myNotes, myId) => {
       headingMatch(matchName, matchingNotes, myNotes);
 
-      const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.'], 'randomWalk');
+      const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.', '8n', '16n', '16n', '8n.', '8n'], 'randomWalk');
       const bowedNotePattern = new Tone.CtrlPattern(myNotes, 'randomWalk');
-      const part = merge(bowedRhythmPattern.values, bowedNotePattern.values);
-      console.log(`the part: ${JSON.stringify(part)}`);
-      // FIXME: still not really working correctly, not playing all notes in array
+      const bowedPart = merge(bowedRhythmPattern.values, bowedNotePattern.values);
+      console.log({bowedRhythmPattern, bowedNotePattern});
+
       var pattern = new Tone.Part((time, value) => {
         // play if pattern is a 1
+        // FIXME: working but not playing full melody
         bowedGlass.playbackRate = Nexus.tune.ratio(value.note);
         bowedGlass.start();
-      }, part).stop().start();
+      }, bowedPart).stop().start();
 
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {

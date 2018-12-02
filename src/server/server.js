@@ -4,7 +4,7 @@ import express from 'express';
 import http from 'http';
 import SocketIO from 'socket.io';
 import compression from 'compression';
-import {validNick, findIndex, sanitizeString} from '../shared/util';
+import {validNick, findIndex} from '../shared/util';
 import abletonlink from 'abletonlink';
 
 const app = express();
@@ -58,7 +58,6 @@ io.on('connection', (socket) => {
 
   socket.on('heading', (data) => {
     currentUser.heading = data;
-    // currentUser.matchingNotes = matchingNotes;
 
     for (let i = 0; i < users.length; i++) {
       if ((Math.abs(currentUser.heading - users[i].heading) === 180)) {

@@ -75,7 +75,6 @@ io.on('connection', function (socket) {
 
   socket.on('heading', function (data) {
     currentUser.heading = data;
-    // currentUser.matchingNotes = matchingNotes;
 
     for (var i = 0; i < users.length; i++) {
       if (Math.abs(currentUser.heading - users[i].heading) === 180) {
