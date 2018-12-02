@@ -82,11 +82,9 @@ export default class Player {
     muteToggle.state = true;
 
     // Get compass data
-    let heading;
     kompas()
       .watch()
       .on('heading', h => {
-        heading = h;
         this.socket.emit('heading', h);
       });
 
@@ -129,13 +127,14 @@ export default class Player {
     this.socket.on('getTotalUsers', (total, users) => {
       totalUsers = total;
       userList = users;
+      // note: if number of users is less than 4 then each compass position does not get a unique rhythm
       for (let i = 0; i < totalUsers; i++) {
         patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
       }
       console.log(`total users: ${totalUsers}, user list: ${userList}`);
     });
 
-    /* mute this for now
+    // /* mute this for now
     this.socket.on('beat', function (data) {
       // set to drone for testing
       // part = 'shortSynth';
@@ -155,14 +154,14 @@ export default class Player {
         } else if (part === 'drone' && data.beat % droneLength === 0) {
           const durations = Nexus.pick('1m', '1m', '2m', '3m');
           const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 0); // sometimes doesn't play
-          const offsets = Nexus.pick(0, 5, 10);
+          // const offsets = Nexus.pick(0, 5, 10);
 
           drone.playbackRate = droneNotes.next();
           drone.volume.rampTo(velocity, Nexus.rf(1, 3));
           drone.fadeIn = Tone.Time(durations).toSeconds() / 2;
           drone.fadeOut = Tone.Time(durations).toSeconds() / 3;
           // console.log(`fade in: ${drone.fadeIn}, fade out: ${drone.fadeOut}, total duration: ${durations}`);
-          drone.start('@2n', offsets, durations);
+          drone.start('@2n', 0, durations);
         }
         Tone.Transport.bpm.value = data.bpm;
       }
@@ -219,20 +218,19 @@ export default class Player {
     // got a match
     // do things on client
     this.socket.on('headingMatch', (matchID, matchName, matchingNotes, myNotes, myId) => {
-      headingMatch(matchName, matchingNotes, myNotes);
-
+      // heading match sounds
       const bowedRhythmPattern = new Tone.CtrlPattern(['8n', '8n', '16n', '8n.', '8n', '16n', '16n', '8n.', '8n'], 'randomWalk');
       const bowedNotePattern = new Tone.CtrlPattern(myNotes, 'randomWalk');
       const bowedPart = merge(bowedRhythmPattern.values, bowedNotePattern.values);
       console.log({bowedRhythmPattern, bowedNotePattern});
 
       var pattern = new Tone.Part((time, value) => {
-        // play if pattern is a 1
-        // FIXME: working but not playing full melody
         bowedGlass.playbackRate = Nexus.tune.ratio(value.note);
         bowedGlass.start();
       }, bowedPart).stop().start();
 
+      // heading match views
+      headingMatch(matchName, matchingNotes, bowedNotePattern.values);
       // they're giving you their note
       document.getElementById('take-note').addEventListener('click', () => {
         this.socket.emit('give', matchID, selectNotes().selectedIndex);
@@ -248,9 +246,6 @@ export default class Player {
         You just shared your note with ${stealer}.
         You still have these notes: ${numberToNotes(notes)}.
       </p>`;
-
-      // bowedGlass.playbackRate = Nexus.tune.ratio(notes[Math.floor(Math.random() * notes.length)]);
-      // bowedGlass.start();
     });
   }
 }

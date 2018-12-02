@@ -4,20 +4,17 @@ export function headingMatch (matchName, matchingNotes, myNotes) {
   document.getElementById('heading-match').style.width = '100%';
 
   document.getElementById('match-name').innerHTML = `
-  <p class="f2">
+  <p class="f3">
     you match with: ${matchName}
+    your current melody: ${numberToNotes(myNotes)}
   </p>
   `;
   document.getElementById('match-note').innerHTML = `
-    <p class="f2">
-    their note list: ${numberToNotes(matchingNotes)}
-    would you like to add one of their notes to your note bank?
+    <p class="f3">
+    would you like to add one of their notes to your note bank? Choose one from the list.
     </p>
     <select id="select-notes"></select>
     <button type="button" id="take-note">Take Note</button>
-    <p>
-    you currently have these notes: ${numberToNotes(myNotes)}
-    </p>
   `;
 
   const selectedNote = document.getElementById('select-notes');
