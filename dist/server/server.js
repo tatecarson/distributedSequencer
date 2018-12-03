@@ -90,12 +90,14 @@ io.on('connection', function (socket) {
   // give note to user
   socket.on('give', function (giverId, pickedNote) {
     // look at ever user
-    console.log(pickedNote);
     users.forEach(function (giver) {
       // find the user that matches the giver id
       if (giver.id === giverId) {
         // give the other users notes to current user
         currentUser.notes.push(giver.notes[pickedNote]);
+        console.log('picked note: ' + giver.notes[pickedNote]);
+        giver.notes.splice(giver.notes.indexOf(giver.notes[pickedNote]), 1);
+        console.log('current arrays, currentUser: ' + currentUser.notes + ', giver: ' + giver.notes + ' ');
       }
     });
   });

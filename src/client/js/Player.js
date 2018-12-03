@@ -16,13 +16,10 @@ mobileConsole.show();
 export default class Player {
   constructor (nick) {
     this.nick = nick;
-
     this.socket = io({ query: 'nick=' + nick });
 
     this.setupSocket();
     this.setupSynth();
-
-    // if given name send start immediately
 
     this.socket.emit('start', 'hi');
 
@@ -98,10 +95,7 @@ export default class Player {
       Nexus.tune.ratio(7) // A
     ]);
 
-    StartAudioContext(Tone.context, '.start-audio').then(function () {
-      // started
-      console.log('started');
-    });
+    StartAudioContext(Tone.context, '.start-audio');
 
     Tone.context.latencyHint = 'playback';
 
@@ -111,6 +105,7 @@ export default class Player {
     // stop first if already running
     this.socket.on('start', () => {
       Tone.Transport.stop().start();
+
       bowedGlass.mute = false;
     });
 
@@ -127,17 +122,20 @@ export default class Player {
     this.socket.on('getTotalUsers', (total, users) => {
       totalUsers = total;
       userList = users;
-      // note: if number of users is less than 4 then each compass position does not get a unique rhythm
-      for (let i = 0; i < totalUsers; i++) {
+
+      // note: if number of users is less than 4 then each compass position does not get a unique
+      // + 1 guards against error when only one user
+      for (let i = 0; i < totalUsers + 1; i++) {
         patterns[i] = synth.createPattern(Nexus.ri(1, 8), Nexus.ri(9, 24));
       }
+
       console.log(`total users: ${totalUsers}, user list: ${userList}`);
     });
 
     // /* mute this for now
     this.socket.on('beat', function (data) {
       // set to drone for testing
-      // part = 'shortSynth';
+      part = 'drone';
       let droneLength = patterns[patternIndex % totalUsers].values.length;
 
       // if the transport is running play a note each trigger
@@ -152,16 +150,27 @@ export default class Player {
             rShortSynth.start('@2n', 0, durations);
           }
         } else if (part === 'drone' && data.beat % droneLength === 0) {
-          const durations = Nexus.pick('1m', '1m', '2m', '3m');
-          const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 0); // sometimes doesn't play
-          // const offsets = Nexus.pick(0, 5, 10);
+          // FIXME: long drone sound makes error sometimes
+          // maybe its working? test again later to be sure.
 
-          drone.playbackRate = droneNotes.next();
-          drone.volume.rampTo(velocity, Nexus.rf(1, 3));
+          const durations = Nexus.pick('8n', '1n', '1m', '2m', '3m');
+          const velocity = Nexus.pick(0.2, 0.3, 0.5, 0.7, 0); // sometimes doesn't play
+
+          // guard against undef playback rate, this is a hack to fix a bug
+          // is this actually causing the bug?
+          if (Tone.isUndef(drone.playbackRate)) {
+            drone.playbackRate = 1;
+          } else {
+            drone.playbackRate = droneNotes.next();
+          }
+          // ramp to velocity over a random period of time not to exceed the total duration
+          drone.volume.rampTo(Tone.gainToDb(velocity), Nexus.rf(1, 3) % Tone.Time(durations).toSeconds());
           drone.fadeIn = Tone.Time(durations).toSeconds() / 2;
           drone.fadeOut = Tone.Time(durations).toSeconds() / 3;
-          // console.log(`fade in: ${drone.fadeIn}, fade out: ${drone.fadeOut}, total duration: ${durations}`);
-          drone.start('@2n', 0, durations);
+          console.log(`total time: ${Tone.Time(durations).toSeconds().toFixed(2)}`);
+          console.log(`playback rate: ${drone.playbackRate}, fade in: ${drone.fadeIn.toFixed(2)}, fade out: ${drone.fadeOut.toFixed(2)}, drone mode: ${droneNotes.mode}`);
+
+          drone.stop().start('@2n', 0, durations);
         }
         Tone.Transport.bpm.value = data.bpm;
       }
@@ -240,12 +249,21 @@ export default class Player {
 
     this.socket.on('steal', (stealer, notes) => {
       document.getElementById('heading-match').style.width = '100%';
-      document.getElementById('match-note').innerHTML = `
-  
-      <p class="f2">
-        You just shared your note with ${stealer}.
-        You still have these notes: ${numberToNotes(notes)}.
-      </p>`;
+      if (notes.length) {
+        document.getElementById('match-note').innerHTML = `
+      
+          <p class="f2">
+            You just shared your note with ${stealer}.
+            You still have these notes: ${numberToNotes(notes)}.
+          </p>`;
+      } else {
+        document.getElementById('match-note').innerHTML = `
+      
+          <p class="f2">
+            You would have shared your notes with ${stealer} if you had any left.
+            Find some more notes! 
+          </p>`;
+      }
     });
   }
 }
