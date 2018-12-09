@@ -1,14 +1,13 @@
 {
   "folders": [
     {
-      "path": "/Users/tatecarson/Documents/webDev/Tonejs/tone-testing"
-    },
-    {
       "path": "."
     },
     {
-      "path": "/Users/tatecarson/Documents/webDev/p5js/p5ycho"
+      "path": "/Users/tatecarson/Documents/webDev/tests/node-abletonlink-example"
     }
   ],
-  "settings": {}
+  "settings": {
+    "liveServer.settings.multiRootWorkspaceName": "distributedSequencer"
+  }
 }

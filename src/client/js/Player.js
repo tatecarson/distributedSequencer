@@ -12,7 +12,7 @@ import { numberToNotes, merge } from './soundUtil';
 import { headingMatch, selectNotes } from './views';
 
 // mobile console.log
-mobileConsole.show();
+// mobileConsole.show();
 export default class Player {
   constructor (nick) {
     this.nick = nick;
@@ -135,7 +135,7 @@ export default class Player {
     // /* mute this for now
     this.socket.on('beat', function (data) {
       // set to drone for testing
-      part = 'drone';
+      // part = 'drone';
       let droneLength = patterns[patternIndex % totalUsers].values.length;
 
       // if the transport is running play a note each trigger
