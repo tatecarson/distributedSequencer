@@ -7,36 +7,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="css/mobile-console.min.css">
   <link rel="stylesheet" href="https://unpkg.com/tachyons@4.10.0/css/tachyons.min.css" />
-  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css"> -->
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
- 
+
   <div class="san-serif container">
     <canvas class="layer-1"></canvas>
     <div class="layer-2">
-      <!-- 
-      <p class="f3 tc">
-        Mute Button
-      </p> -->
       <div id="startTransport"></div>
       <div id="welcome" class="f3 tc"></div>
-  
+
       <div id="notes">
         <div id="tilt"></div>
       </div>
-  
+
       <div id="d"></div>
       <div id="heading-match" class="overlay" style="width: 0%">
         <div class="overlay-content">
-  
+
           <div id="match">
             <div id="match-name"></div>
             <div id="match-note"></div>
-            <!-- <select id="select-notes"></select>  -->
             <div id="no-notes"></div>
           </div>
-    
+
         </div>
         <div class="remove-overlay" id="continue">
           <!-- tap to continue -->
@@ -54,44 +49,27 @@
           </p>
           <p>
             Turn and face your neighbors, notice how the sound changes.
-          </p>
-       
-          <!-- <input type="text" tabindex="0" autofocus placeholder="Enter your name here" id="userNameInput" maxlength="25" /> -->
-         
-          <!-- <button type="button" id="submit-user">Start</button> -->
-
-          <main class="pa4 black-80"></main>
-            <form class="measure center">
-              <fieldset id="sign_up" class="ba b--transparent ph0 mh0">
-                <legend class="f4 fw6 ph0 mh0">Please enter your first name below</legend>
-                <div class="mt3">
-                  <!-- <label class="db fw6 lh-copy f6" for="email-address">Email</label> -->
-                  <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-75 " name="name" id="userNameInput" >
-                </div>
-              </fieldset>
-              <div class="start-audio">
-                <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib" type="button" value="Start" id="submit-user">
-              </div>
-            </form>
+          </p <main class="pa4 black-80">
           </main>
-          
-        </div>
+          <form class="measure center">
+            <fieldset id="sign_up" class="ba b--transparent ph0 mh0">
+              <legend class="f4 fw6 ph0 mh0">Please enter your first name below</legend>
+              <div class="mt3">
+                <input class="pa2 input-reset ba bg-transparent hover-bg-black hover-white w-75 " name="name" id="userNameInput">
+              </div>
+            </fieldset>
+            <div class="start-audio">
+              <input class="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib" type="button" value="Start" id="submit-user">
+            </div>
+          </form>
+          </main>
 
-
-        <!-- <div class="remove-overlay" id="restart">
-          <p class="f3 tc">
-            TAP HERE TO START COMPOSING
-          </p>
         </div>
-         -->
       </div>
-
-
     </div>
 
 
     <script>
-
       document.getElementById("continue").addEventListener("click", () => {
         document.getElementById("heading-match").style.width = "0%";
       })
