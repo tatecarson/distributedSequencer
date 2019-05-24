@@ -10,6 +10,7 @@ import mobileConsole from 'js-mobile-console';
 import { animation, bgAnimate } from './animation';
 import { numberToNotes, merge } from './soundUtil';
 import { headingMatch, selectNotes } from './views';
+import MobileDetect from 'mobile-detect';
 
 // mobile console.log
 // mobileConsole.show();
