@@ -13,7 +13,7 @@ import { headingMatch, selectNotes } from './views';
 import MobileDetect from 'mobile-detect';
 
 // mobile console.log
-// mobileConsole.show();
+mobileConsole.show();
 export default class Player {
   constructor (nick) {
     this.nick = nick;
@@ -76,15 +76,27 @@ export default class Player {
 
     // handle deviceorientation
     const tilt = new Nexus.Tilt('#tilt');
+    console.log('am i updating???')
     const muteToggle = new Nexus.Toggle('#startTransport');
     muteToggle.state = true;
 
     // Get compass data
-    kompas()
-      .watch()
-      .on('heading', h => {
-        this.socket.emit('heading', h);
-      });
+    DeviceMotionEvent.requestPermission()
+    .then(response => {
+      if (response == 'granted') {
+        console.log("granted access?")
+        window.addEventListener('devicemotion', (e) => {
+          // do something with e
+          kompas()
+           .watch()
+           .on('heading', h => {
+            this.socket.emit('heading', h);
+          });
+        })
+      }
+    })
+    .catch(console.error)
+
 
     // setup notes
     let percussionNote = Nexus.note(0);

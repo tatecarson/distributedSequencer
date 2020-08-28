@@ -1,5 +1,5 @@
 #Create our image from Node 6.9-alpine
-FROM ubuntu
+FROM ubuntu:18.04
 
 #Create a new directory to run our app.
 RUN mkdir -p /usr/src/app
